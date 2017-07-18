@@ -1,0 +1,16 @@
+body {
+
+}
+#title {
+  font-family: "Comic Sans MS", "Comic Sans", cursive;
+}
+#game {
+  background-color: red;
+  width: 800;
+  height: 600;
+}
+#game-container {
+  margin-right: auto;
+  margin-left: auto;
+  width: 50%;
+}
