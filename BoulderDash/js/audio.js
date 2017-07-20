@@ -1,6 +1,6 @@
 ﻿
 playRandomSound = function (soundArray) {
-    let rand = getRandomInt(0, soundArray.length - 1);
+    let rand = getRandomInt(0, soundArray.length);
     let sound = soundArray[rand];
     sound.play();
 };
@@ -8,14 +8,6 @@ playRandomSound = function (soundArray) {
 loadSoundFile = function (fileName) {
     let audio = new Audio('/sounds/' + fileName + '.ogg');
     return audio;
-};
-
-// Gibt eine Zufallszahl zwischen min (inklusive) und max (exklusive) zurück
-// Die Verwendung von Math.round() erzeugt keine gleichmäßige Verteilung!
-function getRandomInt(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min)) + min;
 };
 
 var dirtSounds = [];

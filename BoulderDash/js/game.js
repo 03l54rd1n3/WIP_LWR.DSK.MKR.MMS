@@ -21,24 +21,20 @@ var frame = 0;
 var imgWidth = 32;
 var imgheight = 32;
 
-var diamonds = 0;
+var diamondCount = 0;
 
-var chances = [ 46, 92, 96, 100];
+var chances = [46, 92, 96, 100];
 
 var gravity = 1;
 
 var player = {
-    x:0,
-    y:0
+    x: 0,
+    y: 0
 };
 
 
-var dimensions = {
-    width: 75,
-    height: 37
-}
 
-var backgroundArray = CreateArray(dimensions.width,dimensions.height);
+var backgroundArray = CreateArray(dimensions.width, dimensions.height);
 
 var blockArray = CreateArray(dimensions.width, dimensions.height);
 
@@ -54,65 +50,41 @@ function CreateBackground() {
 function CreateLevel() {
     for (var x = 0; x < dimensions.width; x++) {
         for (var y = 0; y < dimensions.height; y++) {
-            var chance = Math.round(Math.random() * 100);
-            if (chance <= chances[0]) {
-                blockArray[x][y] = {
-                    type: BlockTypes.Dirt,
-                    baseGravity: 0,
-                    lastFrameTouched: 0
-                };
-            } else if (chance <= chances[1]) {
-                blockArray[x][y] = {
-                    type: BlockTypes.Gravel,
-                    baseGravity: 0,
-                    lastFrameTouched: 0
-                };
-            } else if (chance <= chances[2]) {
-                blockArray[x][y] = {
-                    type: BlockTypes.Stone,
-                    baseGravity: gravity,
-                    lastFrameTouched: 0
-                };
-            } else if (chance <= chances[3]) {
-                blockArray[x][y] = {
-                    type: BlockTypes.Diamond,
-                    baseGravity: 0,
-                    lastFrameTouched: 0
-                };
-            } 
+            if (x != 0 && y != 0) {
+                var chance = Math.round(Math.random() * 100);
+                if (chance <= chances[BlockTypes.Dirt]) {
+                    dirts.push(GameElement(BlockTypes.Dirt, x, y));
+                } else if (chance <= chances[BlockTypes.Gravel]) {
+                    gravels.push(GameElement(BlockTypes.Gravel, x, y));
+                } else if (chance <= chances[BlockTypes.Stone]) {
+                    stones.push(GameElement(BlockTypes.Stone, x, y));
+                } else if (chance <= chances[BlockTypes.Diamond]) {
+                    diamonds.push(GameElement(BlockTypes.Diamond, x, y));
+                }
+            }
         }
     }
 
-    blockArray[0][0] = null;
+
     console.log(blockArray);
 }
 
 
 
-function CreateArray(length) {
-    var arr = new Array(length || 0),
-        i = length;
-
-    if (arguments.length > 1) {
-        var args = Array.prototype.slice.call(arguments, 1);
-        while (i--) arr[length - 1 - i] = CreateArray.apply(this, args);
-    }
-
-    return arr;
-}
 
 
 function Physics() {
-    for (let x = 0; x < dimensions.width; x++) {
-        for (let y = 0; y < dimensions.height; y++) {
-            if (blockArray[x][y] != null)
-                let stone = blockArray[x][y];
-                if (blockArray.type == BlockTypes.Stone)
-                {
-                    stone.
-                }
-            
-        }
+    for (var i = 0; i < stones.length; i++) {
+        stones[i].applyGravity();
+    }
+    for (var i = 0; i < dirts.length; i++) {
+        dirts[i].applyGravity();
+    }
+    for (var i = 0; i < gravels.length; i++) {
+        gravels[i].applyGravity();
+    }
+    for (var i = 0; i < diamonds.length; i++) {
+        diamonds[i].applyGravity();
     }
 }
 
@@ -138,8 +110,7 @@ function OnKeyDown(data) {
 
 
 
-    switch (data.key)
-    {
+    switch (data.key) {
         case "w":
             player.y--;
             break;
@@ -159,8 +130,8 @@ function OnKeyDown(data) {
     if (player.x > dimensions.width - 1)
         player.x = dimensions.width - 1;
 
-    if (player.y< 0)
-        player.y= 0;
+    if (player.y < 0)
+        player.y = 0;
     if (player.y > dimensions.height - 1)
         player.y = dimensions.height - 1;
     if (blockArray[player.x][player.y] == 2) {
@@ -168,11 +139,10 @@ function OnKeyDown(data) {
         player.y = lasty;
     } else if (blockArray[player.x][player.y] == 3) {
         if (player.x != lastx || player.y != lasty) {
-            diamonds++;
+            diamondCount++;
             playRandomSound(pickupSounds);
         }
-    } else if(player.x != lastx || player.y != lasty)
-    {
+    } else if (player.x != lastx || player.y != lasty) {
         if (blockArray[player.x][player.y] == 0) {
             playRandomSound(dirtSounds);
         } else if (blockArray[player.x][player.y] != null) {
@@ -198,7 +168,7 @@ function SetPixelated(context) {
         context.oBackingStorePixelRatio ||
         context.backingStorePixelRatio || 1;
     var ratio = devicePixelRatio / backingStoreRatio;
-    var oldWidth = 1200*2;
+    var oldWidth = 1200 * 2;
     var oldHeight = 592 * 2;
     canvas.style.width = '100%';
     canvas.style.height = '100%';
@@ -221,8 +191,7 @@ function OnDraw() {
     context.clearRect(0, 0, canvas.width, canvas.height);
     for (var x = 0; x < dimensions.width; x++) {
         for (var y = 0; y < dimensions.height; y++) {
-            switch (backgroundArray[x][y])
-            {
+            switch (backgroundArray[x][y]) {
                 case 0:
                     context.drawImage(background, x * imgWidth, y * imgheight, imgWidth, imgheight);
                     break;
@@ -237,33 +206,22 @@ function OnDraw() {
                     break;
 
             }
-            
+
         }
     }
 
 
-    for (var x = 0; x < dimensions.width; x++) {
-        for (var y = 0; y < dimensions.height; y++) {
-            if (blockArray[x][y] != null) {
-                switch (blockArray[x][y].type) {
-                    case BlockTypes.Dirt:
-                        context.drawImage(dirt, x * imgWidth, y * imgheight, imgWidth, imgheight);
-                        break;
-                    case BlockTypes.Gravel:
-                        context.drawImage(gravel, x * imgWidth, y * imgheight, imgWidth, imgheight);
-                        break;
-                    case BlockTypes.Stone:
-                        context.drawImage(stone, x * imgWidth, y * imgheight, imgWidth, imgheight);
-                        break;
-                    case BlockTypes.Diamond:
-                        context.drawImage(diamond, x * imgWidth, y * imgheight, imgWidth, imgheight);
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-        }
+    for (var i = 0; i < stones.length; i++) {
+        context.drawImage(stones[i].texture, stones[i].pos.X * imgWidth, stones[i].Y * imgheight, imgWidth, imgheight);
+    }
+    for (var i = 0; i < dirts.length; i++) {
+        context.drawImage(dirts[i].texture, dirts[i].pos.X * imgWidth, dirts[i].Y * imgheight, imgWidth, imgheight);
+    }
+    for (var i = 0; i < gravels.length; i++) {
+        context.drawImage(gravels[i].texture, gravels[i].pos.X * imgWidth, gravels[i].Y * imgheight, imgWidth, imgheight);
+    }
+    for (var i = 0; i < diamonds.length; i++) {
+        context.drawImage(diamonds[i].texture, diamonds[i].pos.X * imgWidth, diamonds[i].Y * imgheight, imgWidth, imgheight);
     }
     context.drawImage(character, player.x * imgWidth, player.y * imgheight, imgWidth, imgheight);
     frame++;
