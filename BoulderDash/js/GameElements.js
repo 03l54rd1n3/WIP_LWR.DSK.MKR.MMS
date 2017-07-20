@@ -1,5 +1,5 @@
 ﻿var elementGrid = {
-    grid: CreateArray(dimensions.height, dimensions.width),
+    grid: CreateArray(dimensions.width, dimensions.height),
 
     getElementAt: function (coord) {
         if (this.isPosValid(coord)) {
@@ -76,7 +76,6 @@ function GameElement(blockType, posX, posY) {
     this.texture = getTexture(this.blockType);
     this.gravity = 1;
 
-    return this;
 }
 
 function getTexture(blockType) {

@@ -53,13 +53,13 @@ function CreateLevel() {
             if (x != 0 && y != 0) {
                 var chance = Math.round(Math.random() * 100);
                 if (chance <= chances[BlockTypes.Dirt]) {
-                    dirts.push(GameElement(BlockTypes.Dirt, x, y));
+                    dirts.push(new GameElement(BlockTypes.Dirt, x, y));
                 } else if (chance <= chances[BlockTypes.Gravel]) {
-                    gravels.push(GameElement(BlockTypes.Gravel, x, y));
+                    gravels.push(new GameElement(BlockTypes.Gravel, x, y));
                 } else if (chance <= chances[BlockTypes.Stone]) {
-                    stones.push(GameElement(BlockTypes.Stone, x, y));
+                    stones.push(new GameElement(BlockTypes.Stone, x, y));
                 } else if (chance <= chances[BlockTypes.Diamond]) {
-                    diamonds.push(GameElement(BlockTypes.Diamond, x, y));
+                    diamonds.push(new GameElement(BlockTypes.Diamond, x, y));
                 }
             }
         }
