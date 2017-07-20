@@ -1,0 +1,9 @@
+﻿body {
+}
+#game{
+    background-color:#000;
+    width:3200px;
+}
+.invisible{
+    display:none;
+}
