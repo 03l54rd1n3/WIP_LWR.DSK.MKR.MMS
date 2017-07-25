@@ -7,13 +7,10 @@ var canvas;
 var context;
 var player;
 var character;
-var dirt;
-var diamond;
+var character_crushed;
 var background;
 var background2;
 var background3;
-var gravel;
-var stone;
 
 var time = 120;
 var frame = 0;
@@ -27,9 +24,21 @@ var chances = [46, 92, 96, 100];
 
 var gravity = 1;
 
+var drawHandle;
+
+
 var player = {
     x: 0,
-    y: 0
+    y: 0,
+    alive: true,
+    getCoord: function () {
+        return new Coord(this.x, this.y);
+    },
+    onDeath: function () {
+        this.alive = false;
+        clearInterval(drawHandle);
+        OnDraw();
+    }
 };
 
 
@@ -50,7 +59,7 @@ function CreateBackground() {
 function CreateLevel() {
     for (var x = 0; x < dimensions.width; x++) {
         for (var y = 0; y < dimensions.height; y++) {
-            if (x != 0 && y != 0) {
+            if (x != 0 || y != 0) {
                 var chance = Math.round(Math.random() * 100);
                 if (chance <= chances[BlockTypes.Dirt]) {
                     dirts.push(new GameElement(BlockTypes.Dirt, x, y));
@@ -64,9 +73,6 @@ function CreateLevel() {
             }
         }
     }
-
-
-    console.log(blockArray);
 }
 
 
@@ -110,7 +116,7 @@ function OnKeyDown(data) {
 
 
 
-    switch (data.key) {
+    switch (data.key.toLowerCase()) {
         case "w":
             player.y--;
             break;
@@ -134,25 +140,39 @@ function OnKeyDown(data) {
         player.y = 0;
     if (player.y > dimensions.height - 1)
         player.y = dimensions.height - 1;
-    if (blockArray[player.x][player.y] == 2) {
+
+    let element = elementGrid.getElementAt(new Coord(player.x, player.y));
+
+
+
+    if (element.blockType == BlockTypes.Stone) {
         player.x = lastx;
         player.y = lasty;
-    } else if (blockArray[player.x][player.y] == 3) {
+    } else if (element.blockType == BlockTypes.Diamond) {
         if (player.x != lastx || player.y != lasty) {
             diamondCount++;
             playRandomSound(pickupSounds);
         }
     } else if (player.x != lastx || player.y != lasty) {
-        if (blockArray[player.x][player.y] == 0) {
+        if (element.blockType == BlockTypes.Dirt) {
             playRandomSound(dirtSounds);
-        } else if (blockArray[player.x][player.y] != null) {
+        } else if (element.blockType == BlockTypes.Gravel) {
             playRandomSound(gravelSounds);
         }
     }
 
 
-    blockArray[player.x][player.y] = null;
-    console.log(player);
+    //Removement - needs improvement
+
+    element = elementGrid.getElementAt(new Coord(player.x, player.y));
+    elementGrid.grid[player.x][player.y] = null;
+    removeA(stones, element);
+    removeA(dirts, element);
+    removeA(gravels, element);
+    removeA(diamonds, element);
+
+
+
 }
 
 function SetPixelated(context) {
@@ -168,8 +188,8 @@ function SetPixelated(context) {
         context.oBackingStorePixelRatio ||
         context.backingStorePixelRatio || 1;
     var ratio = devicePixelRatio / backingStoreRatio;
-    var oldWidth = 1200 * 2;
-    var oldHeight = 592 * 2;
+    var oldWidth = dimensions.width * imgWidth;
+    var oldHeight = dimensions.height * imgheight;
     canvas.style.width = '100%';
     canvas.style.height = '100%';
     canvas.width = oldWidth * ratio;
@@ -178,17 +198,18 @@ function SetPixelated(context) {
 }
 
 
-var PhysicsCooldown = 100;
+var PhysicsCooldown = 5;
 
 function OnDraw() {
     PhysicsCooldown--;
     if (PhysicsCooldown < 0) {
-        PhysicsCooldown = 100;
+        PhysicsCooldown = 5;
         Physics();
     }
     var score = document.getElementById('score');
-    score.innerHTML = "Score: " + diamonds;
+    score.innerHTML = "Score: " + diamondCount;
     context.clearRect(0, 0, canvas.width, canvas.height);
+    
     for (var x = 0; x < dimensions.width; x++) {
         for (var y = 0; y < dimensions.height; y++) {
             switch (backgroundArray[x][y]) {
@@ -211,19 +232,36 @@ function OnDraw() {
     }
 
 
+    /*
+    for (var x = 0; x < dimensions.width; x++) {
+        for (var y = 0; y < dimensions.height; y++) {
+            let element = elementGrid.getElementAt(new Coord(x, y));
+            if (element != null && element != undefined)
+            {
+                context.drawImage(element.texture, parseInt(element.pos.X * imgWidth), parseInt(element.pos.Y * imgheight), parseInt(imgWidth), parseInt(imgheight));
+            }
+        }
+    }
+    */
+
+    
     for (var i = 0; i < stones.length; i++) {
-        context.drawImage(stones[i].texture, stones[i].pos.X * imgWidth, stones[i].Y * imgheight, imgWidth, imgheight);
+        context.drawImage(stones[i].texture, parseInt(stones[i].pos.X * imgWidth), parseInt(stones[i].pos.Y * imgheight), parseInt(imgWidth), parseInt(imgheight));
     }
     for (var i = 0; i < dirts.length; i++) {
-        context.drawImage(dirts[i].texture, dirts[i].pos.X * imgWidth, dirts[i].Y * imgheight, imgWidth, imgheight);
+        context.drawImage(dirts[i].texture, dirts[i].pos.X * imgWidth, dirts[i].pos.Y * imgheight, imgWidth, imgheight);
     }
     for (var i = 0; i < gravels.length; i++) {
-        context.drawImage(gravels[i].texture, gravels[i].pos.X * imgWidth, gravels[i].Y * imgheight, imgWidth, imgheight);
+        context.drawImage(gravels[i].texture, gravels[i].pos.X * imgWidth, gravels[i].pos.Y * imgheight, imgWidth, imgheight);
     }
     for (var i = 0; i < diamonds.length; i++) {
-        context.drawImage(diamonds[i].texture, diamonds[i].pos.X * imgWidth, diamonds[i].Y * imgheight, imgWidth, imgheight);
+        context.drawImage(diamonds[i].texture, diamonds[i].pos.X * imgWidth, diamonds[i].pos.Y * imgheight, imgWidth, imgheight);
     }
-    context.drawImage(character, player.x * imgWidth, player.y * imgheight, imgWidth, imgheight);
+    if (player.alive) {
+        context.drawImage(character, player.x * imgWidth, player.y * imgheight, imgWidth, imgheight);
+    } else {
+        context.drawImage(character_crushed, player.x * imgWidth, player.y * imgheight, imgWidth, imgheight);
+    }
     frame++;
 }
 
@@ -233,13 +271,10 @@ function OnDraw() {
 function OnPageLoad(e) {
     // Game init.
     character = document.getElementById('character');
-    dirt = document.getElementById('dirt');
-    diamond = document.getElementById('diamond');
     background = document.getElementById('background');
     background2 = document.getElementById('background2');
     background3 = document.getElementById('background3');
-    gravel = document.getElementById('gravel');
-    stone = document.getElementById('stone');
+    character_crushed = document.getElementById('stone_crushed_player');
 
     canvas = document.getElementById("game");
     if (canvas.getContext) {
@@ -257,5 +292,5 @@ function OnPageLoad(e) {
         this.play();
     }, false);
     document.addEventListener("keydown", OnKeyDown);
-    setInterval(OnDraw, 1000 / 30);
+    drawHandle = setInterval(OnDraw, 1000 / 30);
 }

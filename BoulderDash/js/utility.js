@@ -18,10 +18,34 @@ function CreateArray(length) {
     return arr;
 }
 
+if (!Array.prototype.indexOf) {
+    Array.prototype.indexOf = function (what, i) {
+        i = i || 0;
+        var L = this.length;
+        while (i < L) {
+            if (this[i] === what) return i;
+            ++i;
+        }
+        return -1;
+    };
+}
+
+function removeA(arr) {
+    var what, a = arguments, L = a.length, ax;
+    while (L > 1 && arr.length) {
+        what = a[--L];
+        while ((ax = arr.indexOf(what)) !== -1) {
+            arr.splice(ax, 1);
+        }
+    }
+    return arr;
+}
 
 function Coord(x, y) {
-    this.X = x;
-    this.Y = y;
+    let obj = new Object();
 
-    return this;
+    obj.X = x;
+    obj.Y = y;
+
+    return obj;
 }

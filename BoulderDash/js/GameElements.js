@@ -3,8 +3,8 @@
 
     getElementAt: function (coord) {
         if (this.isPosValid(coord)) {
-            if (grid[coord.X, coord.Y] != 0 && grid[coord.X, coord.Y] != undefined && grid[coord.X, coord.Y] != null) {
-                return grid[coord.X, coord.Y];
+            if (this.grid[coord.X][coord.Y] != 0 && this.grid[coord.X][coord.Y] != undefined && this.grid[coord.X][coord.Y] != null) {
+                return this.grid[coord.X][coord.Y];
             } else {
                 return 0;
             }
@@ -17,7 +17,6 @@
             if (oldPos.X != -1 && oldPos.Y != -1) {
                 this.grid[oldPos.X][oldPos.Y] = undefined;
             }
-            console.log(pos);
             this.grid[pos.X][pos.Y] = element;
         }
     },
@@ -40,7 +39,9 @@ var diamonds = [];
 var players = [];
 
 function GameElement(blockType, posX, posY) {
-    this.getGravity = function () {
+    let obj = new Object();
+
+    obj.getGravity = function () {
         switch (this.blockType) {
             case BlockTypes.Stone:
                 return 1 * gravityfactor;
@@ -49,32 +50,63 @@ function GameElement(blockType, posX, posY) {
         }
     };
 
-    this.applyGravity = function () {
+    obj.applyGravity = function () {
         let newY = this.pos.Y + this.getGravity();
         if (newY < dimensions.height && newY >= 0) {
-            let newPos = new Coord(this.posX, newY);
+            let newPos = new Coord(this.pos.X, newY);
+            let playerCoord = player.getCoord();
             let newSpace = elementGrid.getElementAt(newPos);
             if (newSpace != 0) {
                 return;
             }
-            this.updatePosition(newPos);
+            if (newPos.X != playerCoord.X || newPos.Y != playerCoord.Y) {
+                this.updatePosition(newPos);
+            }
+            else if(this.willCrushPlayer) {
+                //playerKilled
+                console.log("Player killed by Rock.")
+                this.updatePosition(newPos);
+                player.onDeath();
+            }
             //TODO registrieren
+        }
+
+        //could cause problems
+        let farY = this.pos.Y + (this.getGravity() * 2);
+        if (farY < dimensions.height && farY >= 0) {
+            let newPos = new Coord(this.pos.X, farY);
+            let playerCoord = player.getCoord();
+            let newSpace = elementGrid.getElementAt(newPos);
+            if (newSpace != 0) {
+                return;
+            }
+
+            if (newPos.X == playerCoord.X && newPos.Y == playerCoord.Y) {
+                console.log("WillCrushPlayer: X:" + newPos.X + " Y:" + newPos.Y + " , X:" + playerCoord.X + " Y:" + playerCoord.Y);
+                this.willCrushPlayer = true;
+            }
+
+
         }
     };
 
-    this.updatePosition = function (newPos) {
-        let oldPos = new Coord(this.pos.X,this.pos.Y);
+    obj.updatePosition = function (newPos) {
+        let oldPos = new Coord(this.pos.X, this.pos.Y);
         this.pos = newPos;
         elementGrid.registerPosition(this, newPos, oldPos);
     };
 
-    this.blockType = blockType;
-    this.pos = new Coord(-1, -1);
+    obj.willCrushPlayer = false;
 
-    this.updatePosition(new Coord(posX, posY));
+    obj.blockType = blockType;
+    obj.pos = new Coord(-1, -1);
 
-    this.texture = getTexture(this.blockType);
-    this.gravity = 1;
+    obj.updatePosition(new Coord(posX, posY));
+
+    obj.texture = getTexture(obj.blockType);
+    obj.gravity = 1;
+
+    return obj;
 
 }
 

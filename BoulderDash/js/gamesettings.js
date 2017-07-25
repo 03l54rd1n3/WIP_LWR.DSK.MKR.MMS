@@ -1,6 +1,6 @@
 ﻿var gravityfactor = 1;
 
 var dimensions = {
-    width: 75,
-    height: 37
+    width: 40,
+    height: 17
 }
