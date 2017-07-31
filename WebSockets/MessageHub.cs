@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.AspNet.SignalR;
+using System.Drawing;
 namespace WebSockets
 {
     public class MessageHub : Hub
     {
         static Dictionary<string, Lobby> lobbies = new Dictionary<string, Lobby>();
         static Dictionary<string, string> playernames = new Dictionary<string, string>();
-
+        static Dictionary<string, Point> playerPos = new Dictionary<string, Point>();
+        static Dictionary<string, int[,]> lobbyFields = new Dictionary<string, int[,]>();
         public void Quit()
         {
             foreach (string lobby in lobbies.Keys)
@@ -17,6 +19,157 @@ namespace WebSockets
                     playernames.Remove(Context.ConnectionId);
             }
         }
+
+        public void MoveObject(string lobby, dynamic oldPoint, dynamic newPoint)
+        {
+            if (lobbies.ContainsKey(lobby))
+            {
+                Lobby l = lobbies[lobby];
+                int[,] obj = lobbyFields[lobby];
+                if (oldPoint.X == -1 || oldPoint.Y == -1)
+                { }
+                else
+                {
+                    lobbyFields[lobby][newPoint.X, newPoint.Y] = lobbyFields[lobby][oldPoint.X, oldPoint.Y];
+                    lobbyFields[lobby][newPoint.X, newPoint.Y] = -1;
+                    for (int i = 0; i < l.Clients.Count; i++)
+                    {
+                        string key = l.Clients[i];
+                        if (key != Context.ConnectionId)
+                        {
+                            try
+                            {
+                                if (playerPos[key] != null)
+                                {
+                                    Clients.Client(key).MoveObject(oldPoint, newPoint);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void CreateObject(string lobby, int blockType, dynamic newPoint)
+        {
+            if (lobbies.ContainsKey(lobby))
+            {
+                Lobby l = lobbies[lobby];
+
+                lobbyFields[lobby][newPoint.X, newPoint.Y] = blockType;
+                for (int i = 0; i < l.Clients.Count; i++)
+                {
+                    string key = l.Clients[i];
+                    if (key != Context.ConnectionId)
+                    {
+                        try
+                        {
+                            if (playerPos[key] != null)
+                            {
+                                Clients.Client(key).CreateObject(blockType, newPoint);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+                    }
+                }
+            }
+        }
+
+        public void RequestSecondInit()
+        {
+            Clients.Client(Context.ConnectionId).SecondInit();
+        }
+
+
+        public void RequestHostParams(string lobby)
+        {
+            if (lobbies.ContainsKey(lobby))
+            {
+                Lobby l = lobbies[lobby];
+                if (l.host == null)
+                    l.host = Context.ConnectionId;
+                Clients.Client(Context.ConnectionId).HostParams(l.host == Context.ConnectionId);
+            }
+        }
+
+        public void RequestGameField(string lobby)
+        {
+            if (lobbies.ContainsKey(lobby))
+            {
+                for (int x = 0; x < 40; x++)
+                    for (int y = 0; y < 17; y++)
+                        Clients.Client(Context.ConnectionId).CreateObject(lobbyFields[lobby][x, y], x, y);
+                if (lobbies[lobby].host != Context.ConnectionId)
+                    Clients.Client(Context.ConnectionId).SecondInit();
+            }
+        }
+
+
+        public void DestroyObject(string lobby, dynamic point)
+        {
+            if (point != null)
+                if (lobbies.ContainsKey(lobby))
+                {
+                    Lobby l = lobbies[lobby];
+                    lobbyFields[lobby][point.X, point.Y] = -1;
+                    for (int i = 0; i < l.Clients.Count; i++)
+                    {
+                        string key = l.Clients[i];
+                        if (key != Context.ConnectionId)
+                        {
+                            try
+                            {
+                                if (playerPos[key] != null)
+                                {
+                                    Clients.Client(key).DestroyObject(point);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+
+                            }
+                        }
+                    }
+                }
+        }
+
+
+
+        public void JoinGame(string lobby)
+        {
+            if (lobbies.ContainsKey(lobby))
+            {
+                Lobby l = lobbies[lobby];
+                for (int i = 0; i < l.Clients.Count; i++)
+                {
+                    string key = l.Clients[i];
+                    if (key != Context.ConnectionId)
+                    {
+                        try
+                        {
+                            Clients.Client(key).GameJoined(playernames[Context.ConnectionId], Context.ConnectionId);
+                            if (playerPos[key] != null)
+                            {
+                                Clients.Client(Context.ConnectionId).GameJoined(playernames[key], key);
+                                Clients.Client(Context.ConnectionId).UpdatePosition(key, playerPos[key].X, playerPos[key].Y);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+                    }
+                }
+            }
+        }
+
         public void CreateLobby(string name)
         {
             if (name != null)
@@ -25,6 +178,14 @@ namespace WebSockets
                 {
                     lobbies[name] = new Lobby();
                     lobbies[name].name = name;
+                    if (!lobbyFields.ContainsKey(name))
+                    {
+                        int[,] field = new int[40, 17];
+                        for (int x = 0; x < 40; x++)
+                            for (int y = 0; y < 17; y++)
+                                field[x, y] = -1;
+                        lobbyFields[name] = field;
+                    }
                     Clients.Client(Context.ConnectionId).LobbyCreated(name);
                     JoinLobby(name);
                 }
@@ -47,25 +208,27 @@ namespace WebSockets
 
         public void UpdatePosition(string lobby, int x, int y)
         {
-            if (lobbies.ContainsKey(lobby))
-            {
-                Lobby l = lobbies[lobby];
-                for (int i = 0; i < l.Clients.Count; i++)
+            if (lobby != null)
+                if (lobbies.ContainsKey(lobby))
                 {
-                    string key = l.Clients[i];
-                    if (key != Context.ConnectionId)
+                    Lobby l = lobbies[lobby];
+                    playerPos[Context.ConnectionId] = new Point(x, y);
+                    for (int i = 0; i < l.Clients.Count; i++)
                     {
-                        try
+                        string key = l.Clients[i];
+                        if (key != Context.ConnectionId)
                         {
-                            Clients.Client(key).UpdatePosition(key, x, y);
-                        }
-                        catch (Exception ex)
-                        {
+                            try
+                            {
+                                Clients.Client(key).UpdatePosition(Context.ConnectionId, x, y);
+                            }
+                            catch (Exception ex)
+                            {
 
+                            }
                         }
                     }
                 }
-            }
         }
 
         public void ChatMessage(string lobby, string message)

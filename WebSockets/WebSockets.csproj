@@ -93,8 +93,37 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="css\Style.css" />
+    <Content Include="img\background.png" />
+    <Content Include="img\background2.png" />
+    <Content Include="img\background3.png" />
+    <Content Include="img\character.png" />
+    <Content Include="img\diamond.png" />
+    <Content Include="img\dirt.png" />
+    <Content Include="img\gravel.png" />
+    <Content Include="img\remotecharacter.png" />
+    <Content Include="img\rock.png" />
+    <Content Include="img\rock_crushed_player.png" />
     <Content Include="index.html" />
+    <Content Include="js\audio.js" />
+    <Content Include="js\game.js" />
+    <Content Include="js\GameElements.js" />
+    <Content Include="js\gamesettings.js" />
+    <Content Include="js\jquery-3.2.1.min.js" />
+    <Content Include="js\lobby.js" />
+    <Content Include="js\types.js" />
+    <Content Include="js\utility.js" />
+    <Content Include="music\factory_time.mp3" />
+    <Content Include="music\royal_entrance.mp3" />
     <Content Include="packages.config" />
+    <Content Include="sounds\dirt1.ogg" />
+    <Content Include="sounds\dirt2.ogg" />
+    <Content Include="sounds\dirt3.ogg" />
+    <Content Include="sounds\dirt4.ogg" />
+    <Content Include="sounds\gravel1.ogg" />
+    <Content Include="sounds\gravel2.ogg" />
+    <Content Include="sounds\gravel3.ogg" />
+    <Content Include="sounds\gravel4.ogg" />
+    <Content Include="sounds\pickup.ogg" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

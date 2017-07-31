@@ -8,6 +8,7 @@ namespace WebSockets
     public class Lobby
     {
         public string name;
+        public string host = null;
         public List<string> Clients = new List<string>();
 
         public static explicit operator LobbyInfo(Lobby b)  // explicit byte to digit conversion operator
