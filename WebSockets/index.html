@@ -2,87 +2,30 @@
 <html>
 <head>
     <title>SignalR Lobby</title>
+    <link rel="stylesheet" href="css/Style.css" />
 </head>
 <body>
     <div class="container">
-        <table id="content">
-            <tr>
-                <td>
-                    <input type="text" id="message" />
-                    <input type="button" id="sendmessage" value="Create Lobby" />
-                    <input type="hidden" id="displayname" />
-                    <ul id="lobbies"></ul>
-                </td>
-                <td>
-                    <ul id="chat"></ul>
-                    <input type="text" id="chatmessage" />
-                    <input type="button" id="sendchatmessage" value="Send" />
-                </td>
-                <td>
-                    <p>Players: </p>
-                    <ul id="players"></ul>
-                </td>
-            </tr>
-        </table>
+        <div id="leftcont">
+            <input type="text" id="message" />
+            <input type="button" id="sendmessage" value="Create Lobby" />
+            <input type="hidden" id="displayname" />
+            <ul id="lobbies"></ul>
+        </div>
+        <div id="maincont">
+            <ul id="chat"></ul>
+            <input type="text" id="chatmessage" />
+            <input type="button" id="sendchatmessage" value="Send" />
+        </div>
+        <div id="rightcont">
+            <p>Players: </p>
+            <ul id="players"></ul>
+        </div>
+
+
+
 
     </div>
-    <style>
-        #content {
-            width: 100%;
-            height: 800px;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .chatmessage {
-            list-style-type: none;
-            padding: 5px;
-            color: #fff;
-        }
-
-        #chat {
-            background-color: #000;
-            width: 100%;
-            height: 95%;
-            overflow: scroll;
-            padding-left: 2px;
-            margin-left: 2px;
-        }
-
-        #lobbies {
-            width: 220px;
-        }
-
-        .lobby {
-            cursor: pointer;
-        }
-
-        .lob {
-            list-style-type: none;
-            padding: 10px;
-            background-color: #00a9ff;
-            margin-top: 2px;
-            width: 200px;
-            height: 40px;
-            text-align: center;
-            line-height: 40px;
-            color: #fff;
-        }
-
-        .curlob {
-            list-style-type: none;
-            padding: 10px;
-            background-color: #00ffc1;
-            margin-top: 2px;
-            width: 200px;
-            height: 40px;
-            text-align: center;
-            line-height: 40px;
-            color: #fff;
-        }
-    </style>
     <!--Script references. -->
     <!--Reference the jQuery library. -->
     <script src="Scripts/jquery-1.6.4.min.js"></script>

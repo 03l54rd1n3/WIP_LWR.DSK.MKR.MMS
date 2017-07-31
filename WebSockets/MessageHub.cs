@@ -97,35 +97,36 @@ namespace WebSockets
 
         public void LeaveLobby(string lobby)
         {
-            if (lobbies.ContainsKey(lobby))
-            {
-                Lobby l = lobbies[lobby];
-                if (l.Clients.Contains(Context.ConnectionId))
+            if (lobby != null)
+                if (lobbies.ContainsKey(lobby))
                 {
-                    l.Clients.Remove(Context.ConnectionId);
-                    Clients.Client(Context.ConnectionId).ChatMessage("Server", "You left lobby " + lobby);
-                    for (int i = 0; i < l.Clients.Count; i++)
+                    Lobby l = lobbies[lobby];
+                    if (l.Clients.Contains(Context.ConnectionId))
                     {
-                        string key = l.Clients[i];
-                        if (key != Context.ConnectionId)
+                        l.Clients.Remove(Context.ConnectionId);
+                        Clients.Client(Context.ConnectionId).ChatMessage("Server", "You left lobby " + lobby);
+                        for (int i = 0; i < l.Clients.Count; i++)
                         {
-                            try
+                            string key = l.Clients[i];
+                            if (key != Context.ConnectionId)
                             {
-                                Clients.Client(key).PlayerLeft(playernames[Context.ConnectionId]);
-                            }
-                            catch (Exception ex)
-                            {
+                                try
+                                {
+                                    Clients.Client(key).PlayerLeft(playernames[Context.ConnectionId]);
+                                }
+                                catch (Exception ex)
+                                {
 
+                                }
                             }
                         }
+                        Clients.All.UpdateLobbies();
                     }
-                    Clients.All.UpdateLobbies();
                 }
-            }
-            else
-            {
-                Clients.Client(Context.ConnectionId).LobbyJoinFailed("Lobby does not exist");
-            }
+                else
+                {
+                    Clients.Client(Context.ConnectionId).LobbyJoinFailed("Lobby does not exist");
+                }
         }
 
         public void GetLobbies()
@@ -171,7 +172,7 @@ namespace WebSockets
                         LeaveLobby(lobbyName);
                     }
                     l.Clients.Add(Context.ConnectionId);
-                    Clients.Client(Context.ConnectionId).ChatMessage("Server", "You joined lobby" + lobby);
+                    Clients.Client(Context.ConnectionId).ChatMessage("Server", "You joined lobby " + lobby);
                     Clients.Client(Context.ConnectionId).LobbyJoined(lobby);
                     for (int i = 0; i < l.Clients.Count; i++)
                     {
