@@ -1,0 +1,120 @@
+﻿body {
+    margin: 0px;
+    width: 100%;
+    height: 100%;
+    background-color: #444;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html {
+    width: 100%;
+    height: 100%;
+}
+
+#content {
+    width: 100%;
+    height: 800px;
+}
+
+.chatmessage {
+    list-style-type: none;
+    padding: 5px;
+    color: #fff;
+}
+
+#chat {
+    background-color: #000;
+    width: 100%;
+    height: 95%;
+    overflow: scroll;
+    padding-left: 2px;
+    margin-left: 2px;
+}
+
+#lobbies {
+    width: 220px;
+}
+
+.lobby {
+    cursor: pointer;
+}
+
+.container {
+    width: 100%;
+    height: 100%;
+}
+
+
+input[type=text],
+input[type=button]{
+    background-color: transparent;
+    border: 1px solid rgba(0, 0, 0, 0.61);
+    color: #fff;
+}
+
+
+#game {
+    background-color: #000;
+    width: 3200px;
+}
+
+.invisible {
+    display: none;
+}
+
+.lob {
+    list-style-type: none;
+    background-color: #00a9ff;
+    margin-top: 2px;
+    width: 200px;
+    height: 40px;
+    text-align: center;
+    line-height: 40px;
+    color: #fff;
+}
+
+ul {
+    margin: 0px;
+    padding: 0px;
+}
+.player {
+    list-style-type: none;
+}
+.curlob {
+    list-style-type: none;
+    background-color: #00ffc1;
+    margin-top: 2px;
+    width: 200px;
+    height: 40px;
+    text-align: center;
+    line-height: 40px;
+    color: #fff;
+}
+
+#leftcont {
+    height: calc(100% - 20px);
+    width: 200px;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    background-color: #0072ff;
+    padding: 10px;
+}
+
+#maincont {
+    height: calc(100% - 20px);
+    margin-left: 220px;
+    margin-right: 220px;
+    padding: 10px;
+}
+
+#rightcont {
+    height: calc(100% - 20px);
+    width: 200px;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    background-color: #0072ff;
+    padding: 10px;
+}

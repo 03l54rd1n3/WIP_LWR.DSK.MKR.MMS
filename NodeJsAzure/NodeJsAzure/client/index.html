@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BoulderDash Multiplayer - Node.js</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/utility.js"></script>
+    <script src="js/gamesettings.js"></script>
+    <!--<script src="js/gameelements.js"></script>-->
+    <script src="js/audio.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="js/types.js"></script>
+    <script src="js/lobby.js"></script>
+    <script src="js/game.js"></script>
+</head>
+<body>
+    <div id="gamecontainer" style="display:none;">
+
+        <div class="invisible">
+            <img id="character" src="img/character.png" />
+            <img id="background" src="img/background.png" />
+            <img id="background2" src="img/background2.png" />
+            <img id="background3" src="img/background3.png" />
+            <img id="dirt" src="img/dirt.png" />
+            <img id="gravel" src="img/gravel.png" />
+            <img id="stone" src="img/rock.png" />
+            <img id="wall" src="img/wall.png" />
+            <img id="stone_crushed_player" src="img/rock_crushed_player.png" />
+            <img id="diamond" src="img/diamond.png" />
+        </div>
+        <div id="score"></div>
+        <canvas id="game"></canvas>
+    </div>
+
+    <div id="container" class="container">
+        <div id="leftcont">
+            <input type="text" id="lobby" />
+            <input type="button" id="createlobby" value="Create Lobby" />
+            <ul id="lobbies"></ul>
+        </div>
+        <div id="maincont">
+            <ul id="chat"></ul>
+            <input type="text" id="chatmessage" />
+            <input type="button" id="sendchatmessage" value="Send" />
+        </div>
+        <div id="rightcont">
+            <input type="button" id="joingame" value="Join Game" />
+            <p>Players: </p>
+            <ul id="players"></ul>
+        </div>
+
+    </div>
+</body>
+</html>

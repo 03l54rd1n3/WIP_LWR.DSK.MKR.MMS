@@ -1,0 +1,14 @@
+{
+  "name": "node-js",
+  "version": "6.11.3",
+  "description": "NodeJs",
+  "main": "server.js",
+  "author": {
+    "name": "maxi"
+  },
+  "dependencies": {
+    "express": "^4.15.4",
+    "socket.io": "^2.0.3",
+    "socket.io-client": "^2.0.3"
+  }
+}

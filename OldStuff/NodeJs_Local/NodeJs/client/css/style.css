@@ -1,0 +1,10 @@
+﻿body {
+}
+#game {
+    background-color: #000;
+    height:100%;
+}
+
+.invisible {
+    display: none;
+}
