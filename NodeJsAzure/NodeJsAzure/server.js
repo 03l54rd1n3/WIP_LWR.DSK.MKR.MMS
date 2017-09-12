@@ -41,7 +41,7 @@ class game {
         this.id = 0;
         this.socketid = undefined;
         this.lvlname = "lvl1";
-        this.elements = CreateArray(32, 24);
+        this.elements = [];
         this.playerSpawn = { x: 0, y: 0 };
     }
 }
@@ -65,10 +65,18 @@ class level {
     constructor() {
         this.playerSpawn = { x: 0, y: 0 };
         this.name = "";
-        this.elements = CreateArray(32, 24);
+        this.elements = [];
     }
 }
 
+class element {
+    constructor() {
+        this.id = 0;
+        this.type = BlockTypes.Empty;
+        this.position = { x: 0, y: 0 };
+        this.currentPosition = { x: 0, y: 0 };
+    }
+}
 
 //BlockTypes
 
@@ -102,28 +110,32 @@ function loadLevel(name) {
         while (null !== (chunk = readable.read(1))) {
             if ((column < 32 && row < 24) || chunk == "\n" || chunk == "\r") {
                 doesCount = true;
+                let elem = new element();
+                elem.position = { x: column, y: row };
+                elem.currentPosition = { x: column, y: row };
+                elem.id = curlevel.elements.length;
                 switch (chunk) {
                     case "W":
-                        curlevel.elements[column][row] = BlockTypes.Wall;
+                        elem.type = BlockTypes.Wall;
                         break;
                     case "w":
-                        curlevel.elements[column][row] = BlockTypes.Wall;
+                        elem.type = BlockTypes.Wall;
                         break;
                     case ".":
-                        curlevel.elements[column][row] = BlockTypes.Dirt;
+                        elem.type = BlockTypes.Dirt;
                         break;
                     case "d":
-                        curlevel.elements[column][row] = BlockTypes.Diamond;
+                        elem.type = BlockTypes.Diamond;
                         break;
                     case "r":
-                        curlevel.elements[column][row] = BlockTypes.Stone;
+                        elem.type = BlockTypes.Stone;
                         break;
                     case " ":
-                        curlevel.elements[column][row] = BlockTypes.Empty;
+                        elem.type = BlockTypes.Empty;
                         break;
                     case "X":
                         curlevel.playerSpawn = { x: column, y: row };
-                        curlevel.elements[column][row] = BlockTypes.Empty;
+                        elem.type = BlockTypes.Empty;
                         break;
                     case "\r":
                         doesCount = false;
@@ -143,8 +155,11 @@ function loadLevel(name) {
                         doesCount = false;
                         break;
                 }
-                if (doesCount)
+                if (doesCount) {
                     column++;
+                    if (elem.type != BlockTypes.Empty)
+                        curlevel.elements.push(elem);
+                }
 
             }
             lastchunk = chunk;
@@ -212,7 +227,6 @@ function removeEmptyLobbys() {
 }
 
 
-
 io.on('connection', function (socket) {
 
     //Connection Init
@@ -274,7 +288,23 @@ io.on('connection', function (socket) {
         socket.emit('pushPlayers', lobbyPlayers);
     }
 
+    function getElementById(id) {
+        let elem = undefined;
+        currentGame.elements.forEach(function (item, index) {
+            if (item.id == id)
+                elem = item;
+        });
+        return elem;
+    }
 
+    function getElementAtPosition(position) {
+        let elem = undefined;
+        currentGame.elements.forEach(function (item, index) {
+            if (item.position.x == position.x && item.position.y == position.y)
+                elem = item;
+        });
+        return elem;
+    }
 
     //GenericEvents
 
@@ -443,7 +473,7 @@ io.on('connection', function (socket) {
 
         setInterval(function () {
             calculatePhysics();
-        }, 1000 / 2);
+        }, 1000 / 5);
     });
 
     socket.on('message', function (data) {
@@ -457,7 +487,9 @@ io.on('connection', function (socket) {
         switch (data.type) {
             case "moveplayer":
                 currentPlayer.position = data.data;
-                currentGame.elements[data.data.x][data.data.y] = BlockTypes.Empty;
+                let elem = getElementAtPosition(data.data);
+                let index = currentGame.elements.indexOf(elem);
+                currentGame.elements.splice(index, 1);
                 break;
             case "score":
                 currentPlayer.score = data.data;
@@ -502,44 +534,43 @@ io.on('connection', function (socket) {
             if (currentGame.host == socket.id) {
                 for (let x = 0; x < 32; x++)
                     for (let y = 22; y > 0; y--) {
-                        let elem = currentGame.elements[x][y];
+                        let elem = getElementAtPosition({ x: x, y: y });
 
-                        if (elem == BlockTypes.Stone) {
-                            let next = currentGame.elements[x][y + 1];
-                            if (next == BlockTypes.Empty)
-                                if (!isPlayerAtPos({ x: x, y: y + 1 })) {
-                                    currentGame.elements[x][y] = BlockTypes.Empty;
-                                    currentGame.elements[x][y + 1] = elem;
-                                    socket.emit('message', {
-                                        type: 'moveblock',
-                                        data: {
-                                            oldPos: { x: x, y: y },
-                                            newPos: { x: x, y: y + 1 }
-                                        }
-                                    });
-                                    players.forEach(function (player, playerindex) {
-                                        if (currentGame.id == player.game) {
-                                            if (player.socketid != socket.id) {
-                                                socket.to(player.socketid).emit('message', {
-                                                    type: 'moveblock',
-                                                    data: {
-                                                        oldPos: { x: x, y: y },
-                                                        newPos: { x: x, y: y + 1 }
-                                                    }
-                                                });
+                        if (elem != undefined)
+                            if (elem.type == BlockTypes.Stone) {
+                                let next = getElementAtPosition({ x: x, y: y + 1 });
+                                if (next == undefined)
+                                    if (!isPlayerAtPos({ x: x, y: y + 1 })) {
+                                        elem.position = { x: x, y: y + 1 };
+                                        socket.emit('message', {
+                                            type: 'moveblock',
+                                            data: {
+                                                oldPos: { x: x, y: y },
+                                                newPos: { x: x, y: y + 1 },
+                                                id: elem.id
                                             }
-                                        }
-                                    });
-                                }
-                        }
+                                        });
+                                        players.forEach(function (player, playerindex) {
+                                            if (currentGame.id == player.game) {
+                                                if (player.socketid != socket.id) {
+                                                    socket.to(player.socketid).emit('message', {
+                                                        type: 'moveblock',
+                                                        data: {
+                                                            oldPos: { x: x, y: y },
+                                                            newPos: { x: x, y: y + 1 },
+                                                            id: elem.id
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                        });
+                                    }
+                            }
 
                     }
             }
     }
-
-
-
-
+    
 });
 
 

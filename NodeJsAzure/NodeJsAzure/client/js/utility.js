@@ -6,6 +6,11 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
 }
 
+//Lerp
+function lerp(current, desired, time) {
+    return current + time * (desired - current);
+}
+
 
 //Create Array (Multi-Dimensional)
 function CreateArray(length) {
