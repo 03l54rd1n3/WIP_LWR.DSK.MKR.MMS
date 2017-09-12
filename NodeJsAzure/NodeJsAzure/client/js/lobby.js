@@ -1,12 +1,18 @@
-﻿var socket = io('/');
+﻿//Window Loaded
+window.onload = initLobby;
+
+//Socket-Init
+
+var socket = io('/');
 socket.on('connect', function () { });
 socket.on('event', function (data) { });
 socket.on('disconnect', function () { });
 
+//Lobby-State
 var lobby = undefined;
 var playerName = "";
 
-
+//Join Lobby Function
 var joinLobbyClick = function (event) {
     if (lobby != undefined) {
         socket.emit('leaveLobby');
@@ -15,14 +21,22 @@ var joinLobbyClick = function (event) {
     socket.emit('joinLobby', { name: $(event.target).html() });
 };
 
-
-window.onload = initLobby;
+//Lobby-Init
 
 function initLobby() {
+    //Init
 
+    //Get Player Name
     playerName = prompt('Please enter your PlayerName:');
+    //Set Player Name
     socket.emit('playerName', { name: playerName });
+    //Empty Lobby Display (Unnescessary?)
     $('#lobbies').empty();
+    //Start Lobby Query
+    socket.emit('getLobbys');
+
+
+    //User Interactions
 
     $('#joingame').click(function () {
         socket.emit('joinGame', undefined);
@@ -36,8 +50,8 @@ function initLobby() {
         socket.emit('createLobby', { name: $('#lobby').val() });
     });
 
-    socket.emit('getLobbys');
 
+    //ChatMessage
     socket.on('chatMessage', function (data) {
         $('#chat').append('<li class="chatmessage"><strong>' + data.name
             + '</strong>:&nbsp;&nbsp; ' + data.message + '</li>');
@@ -50,13 +64,11 @@ function initLobby() {
         $('#chatmessage').val('');
     });
 
+
+    //Lobby-Logic
     socket.on('lobbyJoined', function (data) {
         lobby = data;
         $('#chat').append('<li class="chatmessage">You joined lobby ' + lobby.name + '</li>');
-    });
-
-    socket.on('errorMessage', function (data) {
-        alert(data.message);
     });
 
     socket.on('lobbyCreated', function (data) {
@@ -86,12 +98,17 @@ function initLobby() {
             + '&nbsp;&nbsp;Joined the lobby</li>');
     });
 
-
-
     socket.on('pushPlayers', function (data) {
         $('#players').empty();
         data.forEach(function (item, index) { 
             $('#players').append('<li class="player">' + item.name + '</li>');
         });
+    });
+
+
+    //Error-Handling
+
+    socket.on('errorMessage', function (data) {
+        alert(data.message);
     });
 }

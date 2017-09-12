@@ -1,9 +1,13 @@
-﻿
+﻿//Sounds
 playRandomSound = function (soundArray) {
     let rand = getRandomInt(0, soundArray.length);
     let sound = soundArray[rand];
     sound.play();
 };
+
+
+
+//Sound Init
 
 loadSoundFile = function (fileName) {
     let audio = new Audio('/sounds/' + fileName + '.ogg');

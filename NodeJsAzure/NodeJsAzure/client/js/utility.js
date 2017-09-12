@@ -6,6 +6,8 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
 }
 
+
+//Create Array (Multi-Dimensional)
 function CreateArray(length) {
     var arr = new Array(length || 0),
         i = length;
@@ -18,6 +20,8 @@ function CreateArray(length) {
     return arr;
 }
 
+
+//Index-Of funtion for Stupid Browsers like IE
 if (!Array.prototype.indexOf) {
     Array.prototype.indexOf = function (what, i) {
         i = i || 0;
@@ -28,24 +32,4 @@ if (!Array.prototype.indexOf) {
         }
         return -1;
     };
-}
-
-function removeA(arr) {
-    var what, a = arguments, L = a.length, ax;
-    while (L > 1 && arr.length) {
-        what = a[--L];
-        while ((ax = arr.indexOf(what)) !== -1) {
-            arr.splice(ax, 1);
-        }
-    }
-    return arr;
-}
-
-function Coord(x, y) {
-    let obj = new Object();
-
-    obj.X = x;
-    obj.Y = y;
-
-    return obj;
 }

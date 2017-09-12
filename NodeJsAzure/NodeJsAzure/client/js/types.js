@@ -1,4 +1,6 @@
-﻿var BlockTypes = {
+﻿//Block-Types
+
+var BlockTypes = {
     Dirt: 0,
     Gravel: 1,
     Stone: 2,

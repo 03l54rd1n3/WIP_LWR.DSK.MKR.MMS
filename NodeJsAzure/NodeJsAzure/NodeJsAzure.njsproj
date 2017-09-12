@@ -31,7 +31,6 @@
   <ItemGroup>
     <Compile Include="client\js\audio.js" />
     <Compile Include="client\js\game.js" />
-    <Compile Include="client\js\GameElements.js" />
     <Compile Include="client\js\gamesettings.js" />
     <Compile Include="client\js\jquery-3.2.1.min.js" />
     <Compile Include="client\js\lobby.js">
