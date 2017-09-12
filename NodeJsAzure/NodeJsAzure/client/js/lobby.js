@@ -11,6 +11,7 @@ socket.on('disconnect', function () { });
 //Lobby-State
 var lobby = undefined;
 var playerName = "";
+var lobbys = [];
 
 //Join Lobby Function
 var joinLobbyClick = function (event) {
@@ -20,6 +21,28 @@ var joinLobbyClick = function (event) {
     }
     socket.emit('joinLobby', { name: $(event.target).html() });
 };
+
+//Rebuild Lobbys
+
+function rebuildLobbys() {
+    $('#lobbies').empty();
+    lobbys.forEach(function (item, index) {
+        if (lobby != undefined) {
+            if (lobby.name == item.name) {
+                $('#lobbies').append('<li class="curlob"><strong class="lobby">' + item.name + '</strong></li>');
+            }
+            else {
+                $('#lobbies').append('<li class="lob"><strong class="lobby">' + item.name + '</strong></li>');
+            }
+        }
+        else {
+            $('#lobbies').append('<li class="lob"><strong class="lobby">' + item.name + '</strong></li>');
+        }
+    });
+    $('.lobby').unbind('click', joinLobbyClick);
+    $('.lobby').bind('click', joinLobbyClick);
+}
+
 
 //Lobby-Init
 
@@ -70,23 +93,26 @@ function initLobby() {
 
     //Lobby-Logic
     socket.on('lobbyJoined', function (data) {
+        //socket.emit('getLobbys');
         lobby = data;
+        rebuildLobbys();
         $('#chat').append('<li class="chatmessage">You joined lobby ' + lobby.name + '</li>');
     });
 
     socket.on('lobbyCreated', function (data) {
+        //socket.emit('getLobbys');
+        /*
         $('#lobbies').append('<li class="curlob"><strong class="lobby">' + data.name + '</strong></li>');
         $('.lobby').unbind('click', joinLobbyClick);
         $('.lobby').bind('click', joinLobbyClick);
+        */
         lobby = data;
         $('#chat').append('<li class="chatmessage">You created lobby ' + lobby.name + '</li>');
     });
 
     socket.on('pushLobbys', function (data) {
-        $('#lobbies').empty();
-        data.forEach(function (item, index) {
-            $('#lobbies').append('<li class="curlob"><strong class="lobby">' + item.name + '</strong></li>');
-        });
+        lobbys = data;
+        rebuildLobbys();
         $('.lobby').unbind('click', joinLobbyClick);
         $('.lobby').bind('click', joinLobbyClick);
     });

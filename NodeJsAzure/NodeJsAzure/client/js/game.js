@@ -181,11 +181,6 @@ function OnKeyDown(data) {
 //Graphics
 
 function OnDraw() {
-    PhysicsCooldown--;
-    if (PhysicsCooldown < 0) {
-        PhysicsCooldown = 5;
-        Physics();
-    }
     var score = document.getElementById('score');
     score.innerHTML = "You: " + diamondCount;
 

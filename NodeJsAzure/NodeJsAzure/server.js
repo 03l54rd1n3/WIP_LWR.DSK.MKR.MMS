@@ -192,7 +192,24 @@ function getLevelByLevelName(name) {
     return level;
 }
 
-
+function removeEmptyLobbys() {
+    let toSplice = [];
+    lobbys.forEach(function (item, index) {
+        if (item != undefined) {
+            let count = 0;
+            players.forEach(function (player, playerindex) {
+                if (item.id == player.lobby) {
+                    count++;
+                }
+            });
+            if (count == 0)
+                toSplice.push(index);
+        }
+    });
+    toSplice.forEach(function (item, index) {
+        lobbys.splice(item, 1);
+    });
+}
 
 
 
@@ -280,9 +297,13 @@ io.on('connection', function (socket) {
 
             games.splice(currentGame.id, 1);
         }
+        removeEmptyLobbys();
+
+
+
 
         console.log(players.length + " players left playing in " + games.length + " games");
-
+        console.log(lobbys.length + " lobbys available");
     });
 
     socket.on('playerName', function (data) {
@@ -306,8 +327,10 @@ io.on('connection', function (socket) {
             lobbys.push(currentLobby);
             console.log('Player Created Lobby: ' + currentLobby.name + " (" + currentPlayer.socketid + ")");
             socket.emit("lobbyCreated", currentLobby);
-            socket.broadcast.emit('pushLobbys', lobbys);
+            removeEmptyLobbys();
+            io.emit('pushLobbys', lobbys);
         } else {
+            removeEmptyLobbys();
             socket.emit('errorMessage', { message: 'Lobby exists.' });
         }
     });
@@ -323,6 +346,8 @@ io.on('connection', function (socket) {
             });
             currentLobby = undefined;
         }
+        removeEmptyLobbys();
+        io.emit('pushLobbys', lobbys);
     });
 
     socket.on('joinLobby', function (data) {
@@ -344,6 +369,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on('getLobbys', function (data) {
+        removeEmptyLobbys();
         socket.emit('pushLobbys', lobbys);
     });
 
