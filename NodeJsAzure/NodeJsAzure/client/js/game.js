@@ -13,7 +13,15 @@ var stone;
 var diamond;
 var character;
 var character_crushed;
+var my_character_running_left;
+var my_character_running_right;
+var my_character_idle;
+var diamond_rotate;
+var morningstar;
+var magicwall;
 var background;
+var explosion;
+var powerup;
 
 //Gamestate
 var players = [];
@@ -34,6 +42,8 @@ var lerpFactor = 0.3;
 var player = {
     x: 0,
     y: 0,
+    anim: 'idle',
+    animIndex: 0,
     alive: true,
     getCoord: function () {
         return new Coord(this.x, this.y);
@@ -83,13 +93,23 @@ function GameInit() {
     background2 = document.getElementById('background2');
     background3 = document.getElementById('background3');
     character_crushed = document.getElementById('stone_crushed_player');
+    my_character_idle = document.getElementById('my_character_idle');
+    my_character_running_left = document.getElementById('my_character_running_left');
+    my_character_running_right = document.getElementById('my_character_running_right');
+    diamond_rotate = document.getElementById('diamond_rotate');
+    magicwall = document.getElementById('magicwall');
+    morningstar = document.getElementById('morningstar');
+    explosion = document.getElementById('explosion');
+    powerup = document.getElementById('powerup');
 
-    textures[BlockTypes.Diamond] = diamond;
+    textures[BlockTypes.Diamond] = diamond_rotate;
     textures[BlockTypes.Stone] = stone;
     textures[BlockTypes.Wall] = wall;
     textures[BlockTypes.Dirt] = dirt;
     textures[BlockTypes.SmallWall] = wall;
-    textures[BlockTypes.Diamond] = diamond;
+    textures[BlockTypes.Morningstar] = morningstar;
+    textures[BlockTypes.PowerUp] = powerup;
+    textures[BlockTypes.Eplosion] = explosion;
     textures[BlockTypes.Empty] = undefined;
 
 
@@ -133,70 +153,70 @@ function SetPixelated(context) {
 }
 
 function OnKeyDown(data) {
+    if (player.alive == true) {
+        var lastx = player.x;
+        var lasty = player.y;
 
-    var lastx = player.x;
-    var lasty = player.y;
+        switch (data.key.toLowerCase()) {
+            case "w":
+                player.y--;
+                break;
+            case "s":
+                player.y++;
+                break;
+            case "a":
+                player.x--;
+                break;
+            case "d":
+                player.x++;
+                break;
+        }
 
-    switch (data.key.toLowerCase()) {
-        case "w":
-            player.y--;
-            break;
-        case "s":
-            player.y++;
-            break;
-        case "a":
-            player.x--;
-            break;
-        case "d":
-            player.x++;
-            break;
-    }
+        if (player.x < 0)
+            player.x = 0;
+        if (player.x > dimensions.width - 1)
+            player.x = dimensions.width - 1;
 
-    if (player.x < 0)
-        player.x = 0;
-    if (player.x > dimensions.width - 1)
-        player.x = dimensions.width - 1;
+        if (player.y < 0)
+            player.y = 0;
+        if (player.y > dimensions.height - 1)
+            player.y = dimensions.height - 1;
 
-    if (player.y < 0)
-        player.y = 0;
-    if (player.y > dimensions.height - 1)
-        player.y = dimensions.height - 1;
-
-    let element = getElementAtPosition({ x: player.x, y: player.y });
+        let element = getElementAtPosition({ x: player.x, y: player.y });
 
 
 
-    if (element.type == BlockTypes.Stone || element.type == BlockTypes.Wall || element.type == BlockTypes.SmallWall) {
-        player.x = lastx;
-        player.y = lasty;
-    } else if (element.type == BlockTypes.Diamond) {
+        if (element.type == BlockTypes.Stone || element.type == BlockTypes.Wall || element.type == BlockTypes.SmallWall) {
+            player.x = lastx;
+            player.y = lasty;
+        } else if (element.type == BlockTypes.Diamond) {
+            if (player.x != lastx || player.y != lasty) {
+                diamondCount++;
+                playRandomSound(pickupSounds);
+                socket.emit('message', {
+                    type: 'score',
+                    socketid: socket.id,
+                    data: diamondCount
+                });
+            }
+        } else if (player.x != lastx || player.y != lasty) {
+            if (element.type == BlockTypes.Dirt) {
+                playRandomSound(dirtSounds);
+            } else if (element.type == BlockTypes.Gravel) {
+                playRandomSound(gravelSounds);
+            }
+        }
+
+
+        //Removement - needs improvement
         if (player.x != lastx || player.y != lasty) {
-            diamondCount++;
-            playRandomSound(pickupSounds);
-            socket.emit('message', {
-                type: 'score',
-                socketid: socket.id,
-                data: diamondCount
-            });
+            socket.emit('message', { type: 'moveplayer', data: { x: player.x, y: player.y }, socketid: socket.id });
+            let index = elements.indexOf(element);
+            if (index > 0)
+                elements.splice(index, 1);
         }
-    } else if (player.x != lastx || player.y != lasty) {
-        if (element.type == BlockTypes.Dirt) {
-            playRandomSound(dirtSounds);
-        } else if (element.type == BlockTypes.Gravel) {
-            playRandomSound(gravelSounds);
-        }
+
     }
-
-
-    //Removement - needs improvement
-    if (player.x != lastx || player.y != lasty) {
-        socket.emit('message', { type: 'moveplayer', data: { x: player.x, y: player.y }, socketid: socket.id });
-        let index = elements.indexOf(element);
-        if (index > 0)
-            elements.splice(index, 1);
-    }
-
-
 
 }
 
@@ -223,8 +243,53 @@ function OnDraw() {
     };
 
 
+
+
+    //Draw Player anim
+
+    let xoff = player.currentPos.x - player.x;
+    let yoff = player.currentPos.y - player.y;
+
+    let anim = 'idle';
+
+    if (xoff < -0.1) {
+        //Move Left
+        anim = 'left';
+    } else if (xoff > 0.1) {
+        //Move Right
+        anim = 'right';
+    } else {
+        anim = 'idle';
+    }
+
+    if (player.anim != anim) {
+        player.anim = anim;
+        player.animIndex = 0;
+    }
+
     if (player.alive) {
-        context.drawImage(character, player.currentPos.x * imgWidth, player.currentPos.y * imgheight, imgWidth, imgheight);
+        let animTexture = my_character_idle;
+
+        switch (player.anim) {
+            case 'idle':
+                animTexture = my_character_idle;
+                break;
+
+            case 'left':
+                animTexture = my_character_running_left;
+                break;
+
+            case 'right':
+                animTexture = my_character_running_right;
+                break;
+        }
+
+
+        if ((player.animIndex) * 16 >= animTexture.naturalWidth)
+            player.animIndex = 0;
+        context.drawImage(animTexture, player.animIndex * imgWidth, 0, imgWidth, imgheight, player.currentPos.x * imgWidth, player.currentPos.y * imgheight, imgWidth, imgheight);
+        player.animIndex++;
+        //context.drawImage(character, player.currentPos.x * imgWidth, player.currentPos.y * imgheight, imgWidth, imgheight);
     } else {
         context.drawImage(character_crushed, player.currentPos.x * imgWidth, player.currentPos.y * imgheight, imgWidth, imgheight);
     }
@@ -233,10 +298,20 @@ function OnDraw() {
         if (item.currentPosition == undefined || item.currentPosition == { x: 0, y: 0 })
             item.currentPosition = item.position;
         item.currentPosition = {
-            x: lerp(item.currentPosition.x, item.position.x, lerpFactor),
-            y: lerp(item.currentPosition.y, item.position.y, lerpFactor)
+            x: lerp(item.currentPosition.x, item.position.x, lerpFactor / 2),
+            y: lerp(item.currentPosition.y, item.position.y, lerpFactor / 2)
         };
-        context.drawImage(textures[item.type], parseInt(item.currentPosition.x * imgWidth), parseInt(item.currentPosition.y * imgheight), parseInt(imgWidth), parseInt(imgheight));
+
+        if (item.animIndex == undefined)
+            item.animIndex = 0;
+
+        let animTexture = textures[item.type];
+
+        if ((item.animIndex) * 16 >= animTexture.naturalWidth)
+            item.animIndex = 0;
+        context.drawImage(animTexture, item.animIndex * imgWidth, 0, imgWidth, imgheight, item.currentPosition.x * imgWidth, item.currentPosition.y * imgheight, imgWidth, imgheight);
+        item.animIndex++;
+        //context.drawImage(textures[item.type], parseInt(item.currentPosition.x * imgWidth), parseInt(item.currentPosition.y * imgheight), parseInt(imgWidth), parseInt(imgheight));
     });
 
     players.forEach(function (item, index) {
@@ -265,7 +340,6 @@ socket.on('message', function (data) {
                     let index = elements.indexOf(elem);
                     if (index > 0)
                         elements.splice(index, 1);
-
                 }
             });
             break;
@@ -282,11 +356,19 @@ socket.on('message', function (data) {
                 }
             });
             break;
+
+        case "death":
+            
+            player.alive = false;
+            break;
     }
 });
 
 socket.on('pushLevel', function (data) {
     elements = data;
+});
+socket.on('death', function (data) {
+    player.alive = false;
 });
 
 socket.on('playerJoined', function (data) {

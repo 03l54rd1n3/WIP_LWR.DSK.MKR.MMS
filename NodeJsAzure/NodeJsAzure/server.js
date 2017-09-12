@@ -71,6 +71,7 @@ class level {
 
 class element {
     constructor() {
+        this.falling = 0;
         this.id = 0;
         this.type = BlockTypes.Empty;
         this.position = { x: 0, y: 0 };
@@ -87,7 +88,10 @@ var BlockTypes = {
     Diamond: 3,
     Empty: 4,
     Wall: 5,
-    SmallWall: 6
+    SmallWall: 6,
+    Morningstar: 7,
+    PowerUp: 8,
+    Explosion: 9
 }
 
 
@@ -119,10 +123,16 @@ function loadLevel(name) {
                         elem.type = BlockTypes.Wall;
                         break;
                     case "w":
-                        elem.type = BlockTypes.Wall;
+                        elem.type = BlockTypes.SmallWall;
                         break;
                     case ".":
                         elem.type = BlockTypes.Dirt;
+                        break;
+                    case "m":
+                        elem.type = BlockTypes.Morningstar;
+                        break;
+                    case "p":
+                        elem.type = BlockTypes.PowerUp;
                         break;
                     case "d":
                         elem.type = BlockTypes.Diamond;
@@ -137,6 +147,7 @@ function loadLevel(name) {
                         curlevel.playerSpawn = { x: column, y: row };
                         elem.type = BlockTypes.Empty;
                         break;
+
                     case "\r":
                         doesCount = false;
                         if (lastchunk != "\n" && lastchunk != "\r") {
@@ -537,9 +548,10 @@ io.on('connection', function (socket) {
                         let elem = getElementAtPosition({ x: x, y: y });
 
                         if (elem != undefined)
-                            if (elem.type == BlockTypes.Stone) {
+                            if (elem.type == BlockTypes.Stone || elem.type == BlockTypes.Morningstar || elem.type == BlockTypes.PowerUp || elem.type == BlockTypes.Diamond) {
                                 let next = getElementAtPosition({ x: x, y: y + 1 });
-                                if (next == undefined)
+                                if (next == undefined) {
+                                    elem.falling++;
                                     if (!isPlayerAtPos({ x: x, y: y + 1 })) {
                                         elem.position = { x: x, y: y + 1 };
                                         socket.emit('message', {
@@ -565,12 +577,26 @@ io.on('connection', function (socket) {
                                             }
                                         });
                                     }
+                                    else {
+                                        if (elem.falling > 1 || elem.type == BlockTypes.Morningstar)
+                                            if (elem.type != BlockTypes.Diamond && elem.type != BlockTypes.PowerUp) {
+                                                players.forEach(function (player, playerindex) {
+                                                    if (player.position.x == x && player.position.y == y + 1)
+                                                        if (currentGame.id == player.game) {
+                                                            console.log('player ' + player.socketid + ' died');
+                                                            io.sockets.to(player.socketid).emit('message', { type: 'death', data: { player: currentPlayer, element: elem } });
+                                                        }
+                                                });
+                                            }
+                                        elem.falling = 0;
+                                    }
+                                }
                             }
 
                     }
             }
     }
-    
+
 });
 
 

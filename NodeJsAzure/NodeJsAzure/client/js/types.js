@@ -7,5 +7,8 @@ var BlockTypes = {
     Diamond: 3,
     Empty: 4,
     Wall: 5,
-    SmallWall: 6
+    SmallWall: 6,
+    Morningstar: 7,
+    PowerUp: 8,
+    Explosion: 9
 }
