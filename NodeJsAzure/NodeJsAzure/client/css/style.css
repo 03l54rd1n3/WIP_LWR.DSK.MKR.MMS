@@ -26,10 +26,13 @@ html {
 #chat {
     background-color: #000;
     width: 100%;
-    height: 95%;
-    overflow: scroll;
-    padding-left: 2px;
-    margin-left: 2px;
+    height: 100%;
+    overflow-y: scroll;
+}
+
+#chatcont  {
+    po
+    height:32px;
 }
 
 #lobbies {
@@ -45,14 +48,36 @@ html {
     height: 100%;
 }
 
-
-input[type=text],
-input[type=button] {
-    background-color: transparent;
-    border: 1px solid rgba(0, 0, 0, 0.61);
-    color: #fff;
+#chatprefix {
+    position: fixed;
+    bottom: 0px;
+    padding-left: 3px;
+    height: 32px;
+    font-style: normal;
+    line-height: 30px;
+    background-color: black;
+    border: none;
+    width: 15px;
 }
 
+#chatmessage {
+    position: fixed;
+    bottom: 0px;
+    margin-left: 15px;
+    line-height: 30px;
+    background-color: black;
+    border: none;
+    color: #fff;
+    width: 100%;
+}
+
+    #chatmessage:focus {
+        line-height: 30px;
+        background-color: black;
+        border: none;
+        width: 100%;
+        outline: none;
+    }
 
 #game {
     background-color: #000;
@@ -105,10 +130,10 @@ ul {
 }
 
 #maincont {
+    overflow:hidden;
     height: calc(100% - 20px);
     margin-left: 220px;
     margin-right: 220px;
-    padding: 10px;
 }
 
 #rightcont {

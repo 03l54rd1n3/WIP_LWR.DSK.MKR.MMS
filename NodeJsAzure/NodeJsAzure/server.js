@@ -197,7 +197,7 @@ function getLevelByLevelName(name) {
 
 
 io.on('connection', function (socket) {
-    
+
     //Connection Init
 
     console.log('Player ' + socket.id + ' connected');
@@ -257,7 +257,7 @@ io.on('connection', function (socket) {
         socket.emit('pushPlayers', lobbyPlayers);
     }
 
-    
+
 
     //GenericEvents
 
@@ -295,7 +295,7 @@ io.on('connection', function (socket) {
 
 
     //LobbyEvents
-    
+
     socket.on('createLobby', function (data) {
         if (!lobbyExists(data.name)) {
             currentLobby = new lobby();
@@ -350,13 +350,18 @@ io.on('connection', function (socket) {
     socket.on('chatMessage', function (data) {
 
         players.forEach(function (item, index) {
-            if (item.lobby == currentLobby.id)
-                if (item.socketid != socket.id) {
-                    socket.to(item.socketid).emit('chatMessage', data);
-                }
+            if (currentLobby != undefined) {
+                if (item.lobby == currentLobby.id)
+                    if (item.socketid != socket.id) {
+                        socket.to(item.socketid).emit('chatMessage', data);
+                    }
+            }
+            else {
+
+            }
         });
     });
-    
+
     socket.on('getLobbyPlayers', function (data) {
         updateLobbyPlayers();
     });
@@ -443,7 +448,7 @@ io.on('connection', function (socket) {
 
 
     //GameFunctions
-   
+
     function isPlayerAtPos(position) {
         let found = false;
         players.forEach(function (player, playerindex) {

@@ -57,11 +57,14 @@ function initLobby() {
             + '</strong>:&nbsp;&nbsp; ' + data.message + '</li>');
     });
 
-    $('#sendchatmessage').click(function () {
-        socket.emit('chatMessage', { name: playerName, message: $('#chatmessage').val() });
-        $('#chat').append('<li class="chatmessage"><strong>' + playerName
-            + '</strong>:&nbsp;&nbsp; ' + $('#chatmessage').val() + '</li>');
-        $('#chatmessage').val('');
+    $('#chatmessage').keypress(function (e) {
+        if (e.which == 13) {
+            socket.emit('chatMessage', { name: playerName, message: $('#chatmessage').val() });
+            $('#chat').append('<li class="chatmessage"><strong>' + playerName
+                + '</strong>:&nbsp;&nbsp; ' + $('#chatmessage').val() + '</li>');
+            $('#chatmessage').val('');
+            $('#chatmessage').focus();
+        }
     });
 
 
@@ -100,7 +103,7 @@ function initLobby() {
 
     socket.on('pushPlayers', function (data) {
         $('#players').empty();
-        data.forEach(function (item, index) { 
+        data.forEach(function (item, index) {
             $('#players').append('<li class="player">' + item.name + '</li>');
         });
     });
