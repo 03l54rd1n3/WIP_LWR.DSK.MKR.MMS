@@ -1,0 +1,33 @@
+{
+  "basePath": "img/",
+  "elements": {
+    "background": {
+      "path": "background.png",
+      "steps": 1
+    },
+    "dirt": {
+      "path": "dirt.png",
+      "steps": 1
+    },
+    "gravel": {
+      "path": "gravel.png",
+      "steps": 1
+    },
+    "stone": {
+      "path": "rock.png",
+      "steps": 1
+    },
+    "diamond": {
+      "path": "Diamond_Rotate.png",
+      "steps": 24
+    },
+    "player": {
+      "path": "character.png",
+      "steps": 1
+    },
+    "crushed": {
+      "path": "rock_crushed_player.png",
+      "steps": 1
+    }
+  }
+}

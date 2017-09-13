@@ -1,0 +1,6 @@
+{
+  "blockSize": 16,
+  "moveDuration": 9,
+  "FPSLimit": 60,
+  "tickTime": 16.666666666666668
+}

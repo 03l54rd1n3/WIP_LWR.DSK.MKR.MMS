@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+    </style>
+    <link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+<div id="container">
+    <div id="sidebar">
+        <div id="scores">
+            <h2>Players</h2>
+
+            <ul id="scores-list">
+                <li>
+                    <span class="main">Player</span>
+                    <span class="score">1</span>
+                </li>
+                <li>
+                    <span class="main">Lennart</span>
+                    <span class="score">2</span>
+                </li>
+                <li>
+                    <span class="main">Thomas</span>
+                    <span class="score">3</span>
+                </li>
+            </ul>
+        </div>
+
+        <div id="games">
+            <button id="lobby-offline">Start Local Game</button>
+            <button id="lobby-online">Create Multiplayer Session</button>
+
+            <h2>Available Sessions</h2>
+            <ul id="lobby-sessions">
+                <li>
+                    <span class="main">Lobby 1</span>
+                    <div class="ic-placeholder"><i class="ic-arrow"></i></div>
+                </li>
+                <li>
+                    <span class="main">Wonder lobby</span>
+                    <div class="ic-placeholder"><i class="ic-arrow"></i></div>
+                </li>
+            </ul>
+        </div>
+
+        <div id="chat">
+            <ul id="chat-messages">
+            </ul>
+
+            <input id="chat-input">
+        </div>
+    </div>
+
+    <div id="main">
+        <canvas id="game"></canvas>
+    </div>
+</div>
+
+
+<script src="../dist/bundle.js"></script>
+</body>
+</html>
