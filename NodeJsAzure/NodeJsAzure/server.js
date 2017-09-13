@@ -31,11 +31,13 @@ class player {
         this.alive = true;
         this.score = 0;
         this.alive = true;
+        this.physicsHandle = undefined;
     }
 }
 
 class game {
     constructor() {
+        this.time = 120;
         this.lobby = -1;
         this.host = undefined;
         this.name = "UnnamedGame";
@@ -242,7 +244,7 @@ function removeEmptyLobbys() {
 io.on('connection', function (socket) {
 
     //Connection Init
-
+    var physicsHandle = undefined;
     console.log('Player ' + socket.id + ' connected');
     var currentPlayer = new player();
     var currentGame = undefined;
@@ -292,12 +294,14 @@ io.on('connection', function (socket) {
 
     function updateLobbyPlayers() {
         let lobbyPlayers = [];
-        players.forEach(function (item, index) {
-            if (item.lobby == currentLobby.id) {
-                lobbyPlayers.push(item);
-            }
-        });
-        socket.emit('pushPlayers', lobbyPlayers);
+        setTimeout(function () {
+            players.forEach(function (item, index) {
+                if (item.lobby == currentLobby.id) {
+                    lobbyPlayers.push(item);
+                }
+            });
+            socket.emit('pushPlayers', lobbyPlayers);
+        }, 0);
     }
 
     function getElementById(id) {
@@ -311,10 +315,12 @@ io.on('connection', function (socket) {
 
     function getElementAtPosition(position) {
         let elem = undefined;
-        currentGame.elements.forEach(function (item, index) {
-            if (item.position.x == position.x && item.position.y == position.y)
-                elem = item;
-        });
+        if (currentGame != undefined)
+            if (currentGame.elements != undefined)
+                currentGame.elements.forEach(function (item, index) {
+                    if (item.position.x == position.x && item.position.y == position.y)
+                        elem = item;
+                });
         return elem;
     }
 
@@ -336,11 +342,12 @@ io.on('connection', function (socket) {
                     count++;
                 }
             });
-
-            games.splice(currentGame.id, 1);
+            if (count == 0)
+                games.splice(currentGame.id, 1);
         }
         removeEmptyLobbys();
 
+        clearInterval(physicsHandle);
 
 
 
@@ -404,7 +411,9 @@ io.on('connection', function (socket) {
             updateLobbyPlayers();
             players.forEach(function (item, index) {
                 if (item.lobby == currentLobby.id) {
-                    socket.to(item.socketid).emit("playerJoinedLobby", currentPlayer);
+                    setTimeout(function () {
+                        socket.to(item.socketid).emit("playerJoinedLobby", currentPlayer);
+                    }, 0);
                 }
             });
         }
@@ -453,6 +462,7 @@ io.on('connection', function (socket) {
 
                 let level = getLevelByLevelName("lvl1");
                 currentGame = new game();
+                currentGame.time = 120;
                 currentGame.id = games.length;
                 currentGame.lobby = currentLobby.id;
                 currentGame.name = currentLobby.name + "_game";
@@ -483,10 +493,39 @@ io.on('connection', function (socket) {
 
         socket.emit('gameJoined', currentGame);
 
-        setInterval(function () {
+        physicsHandle = setInterval(function () {
             calculatePhysics();
         }, 1000 / 5);
     });
+
+    socket.on('leaveGame', function (data) {
+        currentPlayer.game = -1;
+        if (currentGame != undefined) {
+            if (currentGame.host == socket.id)
+                currentGame.host = undefined;
+
+            let count = 0;
+            players.forEach(function (player, playerindex) {
+                if (currentGame.id == player.game) {
+                    if (currentGame.host == undefined)
+                        currentGame.host = player.socketid;
+                    count++;
+                }
+            });
+            if (count == 0)
+                games.splice(currentGame.id, 1);
+        }
+        currentGame = undefined;
+        currentPlayer.position = { x: 0, y: 0 };
+        currentPlayer.currentPosition = { x: 0, y: 0 };
+        currentPlayer.alive = true;
+        currentPlayer.score = 0;
+
+        clearInterval(currentPlayer.physicsHandle);
+
+    });
+
+
 
     socket.on('message', function (data) {
         players.forEach(function (item, index) {
@@ -543,147 +582,149 @@ io.on('connection', function (socket) {
         return found;
     }
 
+    function isAtLeast1PlayerAlive() {
+        let alive = false;
+        players.forEach(function (item, index) {
+            if (currentGame.id == item.game)
+                if (!alive)
+                    alive = item.alive;
+        });
+        return alive;
+    }
+
     function calculatePhysics() {
         if (currentGame != undefined)
             if (currentGame.host == socket.id) {
-                for (let x = 0; x < 32; x++)
-                    for (let y = 22; y > 0; y--) {
-                        let elem = getElementAtPosition({ x: x, y: y });
-                        if (elem != undefined) {
-                            if (elem.aliveTime != undefined) {
-                                elem.aliveTime--;
-                                if (elem.aliveTime <= 0) {
-                                    let index = currentGame.elements.indexOf(elem);
-                                    currentGame.elements.splice(index, 1);
-                                    players.forEach(function (player, playerindex) {
-                                        if (currentGame.id == player.game) {
-                                            io.sockets.to(player.socketid).emit('message', {
-                                                type: 'killblock',
-                                                data: elem
-                                            });
-                                        }
-                                    });
-                                    elem = undefined;
+                if (currentGame.time < 0 && currentGame.time != -11) {
+                    players.forEach(function (item, index) {
+                        if (currentGame.id == item.game)
+                            io.sockets.to(item.socketid).emit('message', { type: 'endTime', data: 0 });
+                    });
+                }
+                else if (currentGame.time != -11) {
+                    currentGame.time -= 0.2;
+                    if (currentGame.time % 1 != 0)
+                        players.forEach(function (item, index) {
+                            if (currentGame.id == item.game)
+                                io.sockets.to(item.socketid).emit('message', { type: 'time', data: currentGame.time });
+                        });
+
+
+                    if (!isAtLeast1PlayerAlive()) {
+                        players.forEach(function (item, index) {
+                            if (currentGame.id == item.game)
+                                io.sockets.to(item.socketid).emit('message', { type: 'endGame' });
+                        });
+                        currentGame.time = -11;
+                    }
+                }
+                if (currentGame.time > 0)
+                    for (let x = 0; x < 32; x++)
+                        for (let y = 22; y > 0; y--) {
+                            let elem = getElementAtPosition({ x: x, y: y });
+                            if (elem != undefined) {
+                                if (elem.aliveTime != undefined) {
+                                    elem.aliveTime--;
+                                    if (elem.aliveTime <= 0) {
+                                        let index = currentGame.elements.indexOf(elem);
+                                        currentGame.elements.splice(index, 1);
+                                        players.forEach(function (player, playerindex) {
+                                            if (currentGame.id == player.game) {
+                                                io.sockets.to(player.socketid).emit('message', {
+                                                    type: 'killblock',
+                                                    data: elem
+                                                });
+                                            }
+                                        });
+                                        elem = undefined;
+                                    }
                                 }
-                            }
-                            if (elem != undefined)
-                                if (elem.type == BlockTypes.Stone || elem.type == BlockTypes.Morningstar || elem.type == BlockTypes.PowerUp || elem.type == BlockTypes.Diamond) {
-                                    let next = getElementAtPosition({ x: x, y: y + 1 });
-                                    if (next == undefined) {
-                                        elem.falling++;
-                                        if (!isPlayerAtPos({ x: x, y: y + 1 })) {
-                                            elem.position = { x: x, y: y + 1 };
-                                            socket.emit('message', {
-                                                type: 'moveblock',
-                                                data: {
-                                                    oldPos: { x: x, y: y },
-                                                    newPos: { x: x, y: y + 1 },
-                                                    id: elem.id
-                                                }
-                                            });
-                                            players.forEach(function (player, playerindex) {
-                                                if (currentGame.id == player.game) {
-                                                    if (player.socketid != socket.id) {
-                                                        socket.to(player.socketid).emit('message', {
-                                                            type: 'moveblock',
-                                                            data: {
-                                                                oldPos: { x: x, y: y },
-                                                                newPos: { x: x, y: y + 1 },
-                                                                id: elem.id
-                                                            }
+                                if (elem != undefined)
+                                    if (elem.type == BlockTypes.Stone || elem.type == BlockTypes.Morningstar || elem.type == BlockTypes.PowerUp || elem.type == BlockTypes.Diamond) {
+                                        let next = getElementAtPosition({ x: x, y: y + 1 });
+                                        if (next == undefined) {
+                                            elem.falling++;
+                                            if (!isPlayerAtPos({ x: x, y: y + 1 })) {
+                                                elem.position = { x: x, y: y + 1 };
+                                                socket.emit('message', {
+                                                    type: 'moveblock',
+                                                    data: {
+                                                        oldPos: { x: x, y: y },
+                                                        newPos: { x: x, y: y + 1 },
+                                                        id: elem.id
+                                                    }
+                                                });
+                                                players.forEach(function (player, playerindex) {
+                                                    if (currentGame.id == player.game) {
+                                                        if (player.socketid != socket.id) {
+                                                            socket.to(player.socketid).emit('message', {
+                                                                type: 'moveblock',
+                                                                data: {
+                                                                    oldPos: { x: x, y: y },
+                                                                    newPos: { x: x, y: y + 1 },
+                                                                    id: elem.id
+                                                                }
+                                                            });
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                            else {
+                                                if (elem.falling > 1 || elem.type == BlockTypes.Morningstar)
+                                                    if (elem.type != BlockTypes.Diamond && elem.type != BlockTypes.PowerUp) {
+                                                        players.forEach(function (player, playerindex) {
+                                                            if (player.position.x == x && player.position.y == y + 1)
+                                                                if (currentGame.id == player.game) {
+                                                                    player.alive = false;
+                                                                    players.forEach(function (item, index) {
+                                                                        if (currentGame.id == item.game)
+                                                                            io.sockets.to(item.socketid).emit('message', { type: 'death', data: { player: player, element: elem } });
+                                                                    });
+                                                                    for (x = -1; x < 2; x++)
+                                                                        for (y = -1; y < 2; y++) {
+                                                                            let elem = getElementAtPosition({ x: player.position.x + x, y: player.position.y + y });
+                                                                            if (elem != undefined) {
+                                                                                elem.type = BlockTypes.Explosion;
+                                                                                elem.aliveTime = 6;
+                                                                                players.forEach(function (item, index) {
+                                                                                    if (currentGame.id == item.game)
+                                                                                        io.sockets.to(item.socketid).emit('message', { type: 'changeblock', data: { block: elem } });
+                                                                                });
+                                                                            } else {
+                                                                                let elem = new element();
+                                                                                elem.position = { x: player.position.x + x, y: player.position.y + y };
+                                                                                elem.currentPosition = { x: player.position.x + x, y: player.position.y + y };
+                                                                                elem.type = BlockTypes.Explosion;
+                                                                                elem.aliveTime = 6;
+                                                                                elem.id = currentGame.elements.length;
+
+                                                                                currentGame.elements.push(elem);
+
+                                                                                players.forEach(function (item, index) {
+                                                                                    if (currentGame.id == item.game)
+                                                                                        io.sockets.to(item.socketid).emit('message', { type: 'addblock', data: { block: elem } });
+                                                                                });
+                                                                            }
+                                                                        }
+                                                                }
                                                         });
                                                     }
-                                                }
-                                            });
+                                                elem.falling = 0;
+                                            }
                                         }
                                         else {
-                                            if (elem.falling > 1 || elem.type == BlockTypes.Morningstar)
-                                                if (elem.type != BlockTypes.Diamond && elem.type != BlockTypes.PowerUp) {
-                                                    players.forEach(function (player, playerindex) {
-                                                        if (player.position.x == x && player.position.y == y + 1)
-                                                            if (currentGame.id == player.game) {
-                                                                player.alive = false;
-                                                                players.forEach(function (item, index) {
-                                                                    if (currentGame.id == item.game)
-                                                                        io.sockets.to(item.socketid).emit('message', { type: 'death', data: { player: player, element: elem } });
-                                                                });
-                                                                for (x = -1; x < 2; x++)
-                                                                    for (y = -1; y < 2; y++) {
-                                                                        let elem = getElementAtPosition({ x: player.position.x + x, y: player.position.y + y });
-                                                                        if (elem != undefined) {
-                                                                            elem.type = BlockTypes.Explosion;
-                                                                            elem.aliveTime = 6;
-                                                                            players.forEach(function (item, index) {
-                                                                                if (currentGame.id == item.game)
-                                                                                    io.sockets.to(item.socketid).emit('message', { type: 'changeblock', data: { block: elem } });
-                                                                            });
-                                                                        } else {
-                                                                            let elem = new element();
-                                                                            elem.position = { x: player.position.x + x, y: player.position.y + y };
-                                                                            elem.currentPosition = { x: player.position.x + x, y: player.position.y + y };
-                                                                            elem.type = BlockTypes.Explosion;
-                                                                            elem.aliveTime = 6;
-                                                                            elem.id = currentGame.elements.length;
-
-                                                                            currentGame.elements.push(elem);
-
-                                                                            players.forEach(function (item, index) {
-                                                                                if (currentGame.id == item.game)
-                                                                                    io.sockets.to(item.socketid).emit('message', { type: 'addblock', data: { block: elem } });
-                                                                            });
-                                                                        }
-                                                                    }
-                                                            }
-                                                    });
-                                                }
-                                            elem.falling = 0;
-                                        }
-                                    }
-                                    else {
-                                        next = getElementAtPosition({ x: x - 1, y: y + 1 });
-                                        if (next == undefined && !isPlayerAtPos({ x: x - 1, y: y + 1 })) {
-                                            let left = getElementAtPosition({ x: x - 1, y: y });
-                                            if (left == undefined)
-                                                if (!isPlayerAtPos({ x: x - 1, y: y })) {
-                                                    elem.position = { x: x - 1, y: y };
-                                                    elem.falling = 0;
-                                                    socket.emit('message', {
-                                                        type: 'moveblock',
-                                                        data: {
-                                                            oldPos: { x: x, y: y },
-                                                            newPos: { x: x - 1, y: y },
-                                                            id: elem.id
-                                                        }
-                                                    });
-                                                    players.forEach(function (player, playerindex) {
-                                                        if (currentGame.id == player.game) {
-                                                            if (player.socketid != socket.id) {
-                                                                socket.to(player.socketid).emit('message', {
-                                                                    type: 'moveblock',
-                                                                    data: {
-                                                                        oldPos: { x: x, y: y },
-                                                                        newPos: { x: x - 1, y: y },
-                                                                        id: elem.id
-                                                                    }
-                                                                });
-                                                            }
-                                                        }
-                                                    });
-                                                }
-                                        }
-                                        else {
-                                            next = getElementAtPosition({ x: x + 1, y: y + 1 });
-                                            if (next == undefined && !isPlayerAtPos({ x: x + 1, y: y + 1 })) {
-                                                let left = getElementAtPosition({ x: x + 1, y: y });
+                                            next = getElementAtPosition({ x: x - 1, y: y + 1 });
+                                            if (next == undefined && !isPlayerAtPos({ x: x - 1, y: y + 1 })) {
+                                                let left = getElementAtPosition({ x: x - 1, y: y });
                                                 if (left == undefined)
-                                                    if (!isPlayerAtPos({ x: x + 1, y: y })) {
-                                                        elem.position = { x: x + 1, y: y };
+                                                    if (!isPlayerAtPos({ x: x - 1, y: y })) {
+                                                        elem.position = { x: x - 1, y: y };
                                                         elem.falling = 0;
                                                         socket.emit('message', {
                                                             type: 'moveblock',
                                                             data: {
                                                                 oldPos: { x: x, y: y },
-                                                                newPos: { x: x + 1, y: y },
+                                                                newPos: { x: x - 1, y: y },
                                                                 id: elem.id
                                                             }
                                                         });
@@ -694,7 +735,7 @@ io.on('connection', function (socket) {
                                                                         type: 'moveblock',
                                                                         data: {
                                                                             oldPos: { x: x, y: y },
-                                                                            newPos: { x: x + 1, y: y },
+                                                                            newPos: { x: x - 1, y: y },
                                                                             id: elem.id
                                                                         }
                                                                     });
@@ -703,13 +744,45 @@ io.on('connection', function (socket) {
                                                         });
                                                     }
                                             }
+                                            else {
+                                                next = getElementAtPosition({ x: x + 1, y: y + 1 });
+                                                if (next == undefined && !isPlayerAtPos({ x: x + 1, y: y + 1 })) {
+                                                    let left = getElementAtPosition({ x: x + 1, y: y });
+                                                    if (left == undefined)
+                                                        if (!isPlayerAtPos({ x: x + 1, y: y })) {
+                                                            elem.position = { x: x + 1, y: y };
+                                                            elem.falling = 0;
+                                                            socket.emit('message', {
+                                                                type: 'moveblock',
+                                                                data: {
+                                                                    oldPos: { x: x, y: y },
+                                                                    newPos: { x: x + 1, y: y },
+                                                                    id: elem.id
+                                                                }
+                                                            });
+                                                            players.forEach(function (player, playerindex) {
+                                                                if (currentGame.id == player.game) {
+                                                                    if (player.socketid != socket.id) {
+                                                                        socket.to(player.socketid).emit('message', {
+                                                                            type: 'moveblock',
+                                                                            data: {
+                                                                                oldPos: { x: x, y: y },
+                                                                                newPos: { x: x + 1, y: y },
+                                                                                id: elem.id
+                                                                            }
+                                                                        });
+                                                                    }
+                                                                }
+                                                            });
+                                                        }
+                                                }
+                                            }
+
+
                                         }
-
-
                                     }
-                                }
+                            }
                         }
-                    }
             }
     }
 

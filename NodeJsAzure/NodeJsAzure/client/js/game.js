@@ -28,14 +28,16 @@ var players = [];
 var textures = [];
 var elements = [];
 var diamondCount = 0;
-
 var time = 120;
-var frame = 0;
 
 var imgWidth = 16;
 var imgheight = 16;
 
 var lerpFactor = 0.3;
+
+var audio;
+
+var explosion_sound = new Audio('/sounds/explosion.wav');
 
 
 //Player-State
@@ -76,6 +78,33 @@ function getElementAtPosition(position) {
             elem = item;
     });
     return elem;
+}
+
+function gameOver() {
+    setTimeout(
+        function () {
+            let scores = "";
+
+
+            scores = "You: " + diamondCount;
+
+            players.forEach(function (item, index) {
+                scores += "\r\n" + item.name + ": " + item.score;
+            });
+
+
+            alert(scores);
+
+            socket.emit('leaveGame');
+
+            player.alive = true;
+            diamondCount = 0;
+            $('#container').css("display", "block");
+            $('#gamecontainer').css("display", "none");
+            clearInterval(drawHandle);
+            document.removeEventListener("keydown", OnKeyDown);
+            audio.pause();
+        }, 600);
 }
 
 
@@ -120,7 +149,7 @@ function GameInit() {
         SetPixelated(context);
     }
 
-    var audio = new Audio('/music/factory_time.mp3');
+    audio = new Audio('/music/factory_time.mp3');
     audio.play();
     audio.volume = 0.2;
     audio.addEventListener('ended', function () {
@@ -225,11 +254,13 @@ function OnKeyDown(data) {
 
 function OnDraw() {
     var score = document.getElementById('score');
-    score.innerHTML = "You: " + diamondCount;
+    score.innerHTML = "You:&nbsp;" + diamondCount;
 
     players.forEach(function (item, index) {
-        score.innerHTML += "</br>" + item.name + ": " + item.score;
+        score.innerHTML += "</br>" + item.name + ":&nbsp;" + item.score;
     });
+
+    score.innerHTML += "</br>Time left:&nbsp;<strong>" + time + "</strong></br>";
 
 
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -287,8 +318,8 @@ function OnDraw() {
 
         if ((player.animIndex) * 16 >= animTexture.naturalWidth)
             player.animIndex = 0;
-        context.drawImage(animTexture, player.animIndex * imgWidth, 0, imgWidth, imgheight, player.currentPos.x * imgWidth, player.currentPos.y * imgheight, imgWidth, imgheight);
-        player.animIndex++;
+        context.drawImage(animTexture, parseInt(player.animIndex) * imgWidth, 0, imgWidth, imgheight, player.currentPos.x * imgWidth, player.currentPos.y * imgheight, imgWidth, imgheight);
+        player.animIndex += 0.5;
         //context.drawImage(character, player.currentPos.x * imgWidth, player.currentPos.y * imgheight, imgWidth, imgheight);
     } else {
         //context.drawImage(character_crushed, player.currentPos.x * imgWidth, player.currentPos.y * imgheight, imgWidth, imgheight);
@@ -310,9 +341,22 @@ function OnDraw() {
             if ((item.animIndex) * 16 >= animTexture.naturalWidth)
                 item.animIndex = 0;
         if ((item.animIndex) * 16 < animTexture.naturalWidth)
-            context.drawImage(animTexture, item.animIndex * imgWidth, 0, imgWidth, imgheight, item.currentPosition.x * imgWidth, item.currentPosition.y * imgheight, imgWidth, imgheight);
-        item.animIndex++;
-        
+            context.drawImage(animTexture, parseInt(item.animIndex) * imgWidth, 0, imgWidth, imgheight, item.currentPosition.x * imgWidth, item.currentPosition.y * imgheight, imgWidth, imgheight);
+
+        switch (item.type) {
+            case BlockTypes.Explosion:
+                item.animIndex += 1;
+                break;
+
+            case BlockTypes.Morningstar:
+                item.animIndex += 0.75;
+                break;
+
+           default:
+                item.animIndex += 0.25;
+                break;
+        }
+
         //context.drawImage(textures[item.type], parseInt(item.currentPosition.x * imgWidth), parseInt(item.currentPosition.y * imgheight), parseInt(imgWidth), parseInt(imgheight));
     });
 
@@ -361,7 +405,7 @@ socket.on('message', function (data) {
             break;
 
         case "death":
-
+            explosion_sound.play();
             if (data.data.player.socketid == socket.id) {
                 player.alive = false;
             }
@@ -372,14 +416,6 @@ socket.on('message', function (data) {
                     }
                 });
             }
-            break;
-
-        case "death":
-            players.forEach(function (item, index) {
-                if (data.data.player.socketid == item.socketid) {
-                    item = data.data.player;
-                }
-            });
             break;
         case "changeblock":
             let block = getElementById(data.data.block.id);
@@ -395,14 +431,20 @@ socket.on('message', function (data) {
         case "addblock":
             elements.push(data.data.block);
             break;
+        case "time":
+            time = data.data - (data.data % 1);
+            break;
+        case "endTime":
+            gameOver();
+            break;
+        case "endGame":
+            gameOver();
+            break;
     }
 });
 
 socket.on('pushLevel', function (data) {
     elements = data;
-});
-socket.on('death', function (data) {
-    player.alive = false;
 });
 
 socket.on('playerJoined', function (data) {
