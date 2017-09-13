@@ -109,7 +109,7 @@ function GameInit() {
     textures[BlockTypes.SmallWall] = wall;
     textures[BlockTypes.Morningstar] = morningstar;
     textures[BlockTypes.PowerUp] = powerup;
-    textures[BlockTypes.Eplosion] = explosion;
+    textures[BlockTypes.Explosion] = explosion;
     textures[BlockTypes.Empty] = undefined;
 
 
@@ -291,7 +291,7 @@ function OnDraw() {
         player.animIndex++;
         //context.drawImage(character, player.currentPos.x * imgWidth, player.currentPos.y * imgheight, imgWidth, imgheight);
     } else {
-        context.drawImage(character_crushed, player.currentPos.x * imgWidth, player.currentPos.y * imgheight, imgWidth, imgheight);
+        //context.drawImage(character_crushed, player.currentPos.x * imgWidth, player.currentPos.y * imgheight, imgWidth, imgheight);
     }
 
     elements.forEach(function (item, index) {
@@ -306,11 +306,13 @@ function OnDraw() {
             item.animIndex = 0;
 
         let animTexture = textures[item.type];
-
-        if ((item.animIndex) * 16 >= animTexture.naturalWidth)
-            item.animIndex = 0;
-        context.drawImage(animTexture, item.animIndex * imgWidth, 0, imgWidth, imgheight, item.currentPosition.x * imgWidth, item.currentPosition.y * imgheight, imgWidth, imgheight);
+        if (item.type != BlockTypes.Explosion)
+            if ((item.animIndex) * 16 >= animTexture.naturalWidth)
+                item.animIndex = 0;
+        if ((item.animIndex) * 16 < animTexture.naturalWidth)
+            context.drawImage(animTexture, item.animIndex * imgWidth, 0, imgWidth, imgheight, item.currentPosition.x * imgWidth, item.currentPosition.y * imgheight, imgWidth, imgheight);
         item.animIndex++;
+        
         //context.drawImage(textures[item.type], parseInt(item.currentPosition.x * imgWidth), parseInt(item.currentPosition.y * imgheight), parseInt(imgWidth), parseInt(imgheight));
     });
 
@@ -321,7 +323,8 @@ function OnDraw() {
             x: lerp(item.currentPos.x, item.position.x, lerpFactor),
             y: lerp(item.currentPos.y, item.position.y, lerpFactor)
         };
-        context.drawImage(character, parseInt(item.currentPos.x * imgWidth), parseInt(item.currentPos.y * imgheight), parseInt(imgWidth), parseInt(imgheight));
+        if (item.alive == true)
+            context.drawImage(character, parseInt(item.currentPos.x * imgWidth), parseInt(item.currentPos.y * imgheight), parseInt(imgWidth), parseInt(imgheight));
     });
 }
 
@@ -358,8 +361,39 @@ socket.on('message', function (data) {
             break;
 
         case "death":
-            
-            player.alive = false;
+
+            if (data.data.player.socketid == socket.id) {
+                player.alive = false;
+            }
+            else {
+                players.forEach(function (item, index) {
+                    if (data.data.player.socketid == item.socketid) {
+                        item.alive = false;
+                    }
+                });
+            }
+            break;
+
+        case "death":
+            players.forEach(function (item, index) {
+                if (data.data.player.socketid == item.socketid) {
+                    item = data.data.player;
+                }
+            });
+            break;
+        case "changeblock":
+            let block = getElementById(data.data.block.id);
+            block.type = data.data.block.type;
+            block.animIndex = 0;
+            break;
+        case "killblock":
+            let cblock = getElementById(data.data.id);
+            let index = elements.indexOf(cblock);
+            elements.splice(index, 1);
+            break;
+
+        case "addblock":
+            elements.push(data.data.block);
             break;
     }
 });
