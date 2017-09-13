@@ -55,8 +55,20 @@ function initLobby() {
     socket.emit('playerName', { name: playerName });
     //Empty Lobby Display (Unnescessary?)
     $('#lobbies').empty();
+
     //Start Lobby Query
     socket.emit('getLobbys');
+    socket.emit('getLevels');
+
+    //Level Push
+
+    socket.on('pushLevelNames', function (data) {
+        $('#lvlselect').empty();
+        data.forEach(function (item, index) {
+            $('#lvlselect').append('<option>' + item + '</option>');
+        });
+    });
+
 
 
     //User Interactions
@@ -70,7 +82,7 @@ function initLobby() {
             socket.emit('leaveLobby');
             $('#chat').append('<li class="chatmessage">You left lobby ' + lobby.name + '</li>');
         }
-        socket.emit('createLobby', { name: $('#lobby').val() });
+        socket.emit('createLobby', { name: $('#lobby').val(), level: $('#lvlselect').val()});
     });
 
 

@@ -90,6 +90,12 @@ html {
     height: 384px;
 }
 
+select,
+input[type=text] {
+    width: 100%;
+}
+
+
 .invisible {
     display: none;
 }

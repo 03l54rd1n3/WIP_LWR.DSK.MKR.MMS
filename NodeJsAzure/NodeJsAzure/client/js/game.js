@@ -22,6 +22,7 @@ var magicwall;
 var background;
 var explosion;
 var powerup;
+var exit;
 
 //Gamestate
 var players = [];
@@ -96,7 +97,11 @@ function gameOver() {
             alert(scores);
 
             socket.emit('leaveGame');
-
+            players = [];
+            textures = [];
+            elements = [];
+            diamondCount = 0;
+            time = 120;
             player.alive = true;
             diamondCount = 0;
             $('#container').css("display", "block");
@@ -130,6 +135,7 @@ function GameInit() {
     morningstar = document.getElementById('morningstar');
     explosion = document.getElementById('explosion');
     powerup = document.getElementById('powerup');
+    exit = document.getElementById('exit');
 
     textures[BlockTypes.Diamond] = diamond_rotate;
     textures[BlockTypes.Stone] = stone;
@@ -139,6 +145,7 @@ function GameInit() {
     textures[BlockTypes.Morningstar] = morningstar;
     textures[BlockTypes.PowerUp] = powerup;
     textures[BlockTypes.Explosion] = explosion;
+    textures[BlockTypes.Exit] = exit;
     textures[BlockTypes.Empty] = undefined;
 
 

@@ -45,6 +45,7 @@
     <Content Include="client\img\background.png" />
     <Content Include="client\img\background2.png" />
     <Content Include="client\img\background3.png" />
+    <Content Include="client\img\exit.png" />
     <Content Include="client\img\my_character_idle.png" />
     <Content Include="client\img\my_character_running_right.png" />
     <Content Include="client\img\my_character_running_left.png" />
@@ -72,7 +73,9 @@
     <Content Include="client\sounds\gravel3.ogg" />
     <Content Include="client\sounds\gravel4.ogg" />
     <Content Include="client\sounds\pickup.ogg" />
-    <Content Include="level\lvl1.txt" />
+    <Content Include="level\Gruppe1_level1.txt" />
+    <Content Include="level\Gruppe1_level2.txt" />
+    <Content Include="level\Gruppe1_level3.txt" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config" />
     <Content Include="package.json" />

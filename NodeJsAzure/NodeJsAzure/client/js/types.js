@@ -10,5 +10,6 @@ var BlockTypes = {
     SmallWall: 6,
     Morningstar: 7,
     PowerUp: 8,
-    Explosion: 9
+    Explosion: 9,
+    Exit: 10
 }

@@ -94,7 +94,8 @@ var BlockTypes = {
     SmallWall: 6,
     Morningstar: 7,
     PowerUp: 8,
-    Explosion: 9
+    Explosion: 9,
+    Exit: 10
 }
 
 
@@ -104,19 +105,19 @@ function loadLevel(name) {
 
     let curlevel = new level();
     curlevel.name = name;
-    let readable = fs.createReadStream("level/" + name + ".txt", {
-        encoding: 'utf8',
-        fd: null,
-    });
-    readable.on('readable', function () {
-        let chunk;
-        let lastchunk;
-        let column = 0;
-        let row = 0;
-        let doesCount = true;
-        while (null !== (chunk = readable.read(1))) {
-            if ((column < 32 && row < 24) || chunk == "\n" || chunk == "\r") {
-                doesCount = true;
+    let readable = fs.readFile("level/" + name + ".txt", 'utf8', function (err, data) {
+
+        data = data.replace('\r', '\n');
+        data = data.replace('\n\n', '\n');
+        let rows = data.split('\n');
+        rows.forEach(function (rowStr, row) { 
+            rowStr = rowStr.replace('\uFEFF', '');
+            rowStr = rowStr.replace('\n', '');
+            rowStr = rowStr.replace('\r', '');
+            for (var i = 0; i < rowStr.length; i++) {
+                let column = i;
+                let chunk = rowStr.charAt(i);
+
                 let elem = new element();
                 elem.position = { x: column, y: row };
                 elem.currentPosition = { x: column, y: row };
@@ -128,7 +129,10 @@ function loadLevel(name) {
                     case "w":
                         elem.type = BlockTypes.SmallWall;
                         break;
-                    case ".":
+                    case "P":
+                        elem.type = BlockTypes.Exit;
+                        break;
+                    case "#":
                         elem.type = BlockTypes.Dirt;
                         break;
                     case "m":
@@ -143,41 +147,23 @@ function loadLevel(name) {
                     case "r":
                         elem.type = BlockTypes.Stone;
                         break;
-                    case " ":
+                    case "e":
                         elem.type = BlockTypes.Empty;
                         break;
                     case "X":
                         curlevel.playerSpawn = { x: column, y: row };
                         elem.type = BlockTypes.Empty;
                         break;
-
-                    case "\r":
-                        doesCount = false;
-                        if (lastchunk != "\n" && lastchunk != "\r") {
-                            column = 0;
-                            row++;
-                        }
-                        break;
-                    case "\n":
-                        doesCount = false;
-                        if (lastchunk != "\n" && lastchunk != "\r") {
-                            column = 0;
-                            row++;
-                        }
-                        break;
                     default:
-                        doesCount = false;
+                        elem.type = BlockTypes.Dirt;
+                        console.log("Unknown Char: " + chunk);
                         break;
                 }
-                if (doesCount) {
-                    column++;
-                    if (elem.type != BlockTypes.Empty)
-                        curlevel.elements.push(elem);
-                }
+                if (elem.type != BlockTypes.Empty)
+                    curlevel.elements.push(elem);
 
             }
-            lastchunk = chunk;
-        }
+        });
         levels.push(curlevel);
     });
 }
@@ -215,7 +201,7 @@ function getLobbyByName(name) {
 function getLevelByLevelName(name) {
     let level = {};
     levels.forEach(function (item, index) {
-        if (item.name = name)
+        if (item.name == name)
             level = JSON.parse(JSON.stringify(item));
     });
     return level;
@@ -371,10 +357,11 @@ io.on('connection', function (socket) {
             currentLobby = new lobby();
             if (data.name != undefined)
                 currentLobby.name = data.name;
+            currentLobby.lvlname = data.level;
             currentLobby.id = lobbys.length;
             currentPlayer.lobby = currentLobby.id;
             lobbys.push(currentLobby);
-            console.log('Player Created Lobby: ' + currentLobby.name + " (" + currentPlayer.socketid + ")");
+            console.log('Player Created Lobby: ' + currentLobby.name + " (" + currentPlayer.socketid + ") " + currentLobby.lvlname);
             socket.emit("lobbyCreated", currentLobby);
             removeEmptyLobbys();
             io.emit('pushLobbys', lobbys);
@@ -460,7 +447,7 @@ io.on('connection', function (socket) {
 
             if (currentGame == undefined) {
 
-                let level = getLevelByLevelName("lvl1");
+                let level = getLevelByLevelName(currentLobby.lvlname);
                 currentGame = new game();
                 currentGame.time = 120;
                 currentGame.id = games.length;
@@ -555,6 +542,15 @@ io.on('connection', function (socket) {
         socket.emit('pushLevel', currentGame.elements)
     });
 
+    socket.on('getLevels', function (data) {
+        let lvlnames = [];
+
+        levels.forEach(function (item, index) {
+            if (-1 == lvlnames.indexOf(item.name))
+                lvlnames.push(item.name);
+        });
+        socket.emit('pushLevelNames', lvlnames);
+    });
 
     //GameFunctions
 
@@ -603,12 +599,12 @@ io.on('connection', function (socket) {
                 }
                 else if (currentGame.time != -11) {
                     currentGame.time -= 0.2;
+
                     if (currentGame.time % 1 != 0)
                         players.forEach(function (item, index) {
                             if (currentGame.id == item.game)
                                 io.sockets.to(item.socketid).emit('message', { type: 'time', data: currentGame.time });
                         });
-
 
                     if (!isAtLeast1PlayerAlive()) {
                         players.forEach(function (item, index) {
