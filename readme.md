@@ -62,7 +62,7 @@ Zurzeit können eigens erstellte Level nur über die Konsole geladen werden. Die
 
 Beispiel:
 
-```javascript
+```
 load("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 W#rW#########rd##dr##Wd########W
 WXd#W#######rd####dr#WWWWWWWWW#W
