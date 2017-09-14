@@ -1,12 +1,10 @@
 import io from 'socket.io-client';
 
-import {LocalGameState, OnlineGameState} from "./state";
+import {LocalGameState} from "./state";
 import {Renderer} from "./renderer";
 import {Game} from "./game";
 import {Keys} from "./keys";
 import {init} from "./ui";
-import {DefaultGenerator} from "../common/generator/default";
-import {Player} from "../common/elements/player";
 
 global.texture = require('./textures');
 
@@ -24,7 +22,7 @@ window.onload = () => {
     renderer.init();
 
     const socket = io();
-    const updates = io('/updates');
+    const updates = io('/updates', {forceNew: true});
 
     updates.on('failure', (msg) => {
         console.error(msg);
@@ -34,14 +32,6 @@ window.onload = () => {
     document.addEventListener('keydown', keys.onDown.bind(keys));
     document.addEventListener('keyup', keys.onUp.bind(keys));
 
-
-    //= new OnlineGameState(updates, 'wip', 'jochen', keys);
-
-    /*const generator = new DefaultGenerator({chances: [46, 92, 96, 100]});
-    const state = new LocalGameState(keys, 32, 24);
-    generator.random(state);
-    state.spawnPlayer('lolo');*/
-
     const game = new Game({
         keys,
         renderer
@@ -49,8 +39,13 @@ window.onload = () => {
 
     init(socket, updates, (lobby) => {
         game.stop();
+        if (game.state && game.state.stop && lobby instanceof LocalGameState) {
+            game.state.stop();
+        }
+
         lobby.keys = keys;
         game.state = lobby;
+
         game.start();
     });
 

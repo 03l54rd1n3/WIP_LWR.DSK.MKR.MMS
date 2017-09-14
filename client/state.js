@@ -3,8 +3,11 @@ import {Player} from "../common/elements/player";
 import {Block} from "../common/elements/block";
 import {MovingStone} from "../common/elements/stone";
 import * as Type from "../common/types";
+import {displayPlayers} from "./ui";
+import * as settings from "../settings.json";
 
 const localId = 1;
+
 
 export class AnimatedGameState extends GameState {
 
@@ -12,16 +15,17 @@ export class AnimatedGameState extends GameState {
         super(id, width, height);
 
         this.step = 0;
-        this.doStep = true;
+        this.stepCoolDown = settings.animationSlowdown;
     }
 
     update() {
-        if (this.doStep) {
-            this.step = (++this.step % 72);
-            this.doStep = false;
+        if(this.stepCoolDown >= 0) {
+            this.stepCoolDown--;
         } else {
-            this.doStep = true;
+            this.step = (++this.step % 72);
+            this.stepCoolDown = settings.animationSlowdown;
         }
+
         super.update();
     }
 
@@ -54,10 +58,13 @@ export class LocalGameState extends AnimatedGameState {
 
     spawnPlayer(nickname) {
         const player = new Player(localId, 0, 0, nickname);
+        const {x = 0, y = 0} = this.playerSpawn || {};
 
-        this.setField(0, 0, player);
+
+        this.setField(x, y, player);
         this.players[localId] = player;
         this.localPlayer = player;
+        this.displayScores = displayPlayers(this.players);
     }
 }
 
@@ -75,8 +82,11 @@ export class OnlineGameState extends AnimatedGameState {
 
         while (move = this.moves.shift()) {
             const {id, x, y} = move;
-            const player = this.players[id];
+            if (id === this.localPlayer.id) {
+                continue;
+            }
 
+            const player = this.players[id];
             this.movePlayer(x, y, player);
             update = true;
         }
@@ -145,18 +155,25 @@ export class OnlineGameState extends AnimatedGameState {
         super.update();
     }
 
+    stop() {
+        this.socket.emit('leave game');
+    }
+
     importGameState(state) {
         const {
             id = this.id,
             width = this.width,
             height = this.height,
-            players = {}, fields = [],
-            rollingStones
+            players = {},
+            fields = [],
+            rollingStones = [],
+            physicsUp = false
         } = state;
 
         this.id = id;
         this.width = width;
         this.height = height;
+        this.physicsUp = physicsUp;
 
         this.importFields(fields);
         this.importPlayers(players);
@@ -188,9 +205,15 @@ export class OnlineGameState extends AnimatedGameState {
     importPlayers(players) {
         this.players = {};
         for (const id in players) {
-            const {_posX = 0, _posY = 0, nickname} = players[id];
+            const {
+                _posX = 0,
+                _posY = 0,
+                nickname = 'unnamed',
+            } = players[id];
 
             const player = new Player(id, _posX, _posY, nickname);
+            Object.assign(player, players[id]);
+
             this.players[id] = player;
             this.setField(_posX, _posY, player);
 
@@ -198,6 +221,8 @@ export class OnlineGameState extends AnimatedGameState {
                 this.localPlayer = player;
             }
         }
+
+        this.displayScores = displayPlayers(this.players);
     }
 
     importStones(stones) {
@@ -205,11 +230,12 @@ export class OnlineGameState extends AnimatedGameState {
         for (const stone of stones) {
             const {
                 _posX: posX = 0,
-                _posY: posY = 0
+                _posY: posY = 0,
             } = stone;
 
             const item = new MovingStone(posX, posY);
             Object.assign(item, stone);
+            this.rollingStones.push(item);
         }
     }
 }

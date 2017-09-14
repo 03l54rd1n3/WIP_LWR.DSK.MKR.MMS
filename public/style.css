@@ -10,6 +10,10 @@ body {
     background: linear-gradient(to left, #b2fefa, #0ed2f7);
 }
 
+a {
+
+}
+
 #container {
     height: 100%;
     display: -webkit-flex;
@@ -39,10 +43,15 @@ body {
     box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
 }
 
-#sidebar > * {
+#sidebar > div {
     -webkit-flex: 1 0 0;
     flex: 1 0 0;
     padding: 24px 12px;
+
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    flex-direction: column;
 }
 
 #main {
@@ -73,6 +82,10 @@ body {
     list-style-type: none;
     padding: 0;
     margin: 12px 4px;
+
+    -webkit-flex: 1 0 0;
+    flex: 1 0 0;
+    overflow-y: auto;
 }
 
 #sidebar ul li {
@@ -81,6 +94,7 @@ body {
     display: flex;
     -webkit-flex-direction: row;
     flex-direction: row;
+    cursor: default;
 
     font-size: 1.2em;
     line-height: 1.4em;
@@ -111,9 +125,46 @@ body {
     flex-direction: column;
 }
 
-#games button {
+#games ul li {
+    cursor: pointer;
+}
+
+#chat {
+
+}
+
+#lobby-offline, #lobby-online {
+    margin-top: .5em;
+    display: inline-block;
+    cursor: pointer;
     width: 100%;
     min-width: 64px;
+    color: white;
+    border-radius: 4px;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+    font-size: 100%;
+    padding: .5em 1em;
+    border: transparent;
+}
+
+#lobby-offline {
+    background: rgb(28, 184, 65);
+}
+
+#lobby-online {
+    margin-bottom: 1em;
+    background: rgb(66, 184, 221)
+}
+
+#chat-input {
+    display: inline-block;
+    margin: .25em 0;
+    padding: .5em .6em;
+    border: 1px solid #ccc;
+    box-shadow: inset 0 1px 3px #ddd;
+    border-radius: 4px;
+    vertical-align: middle;
+    box-sizing: border-box;
 }
 
 .ic-placeholder {

@@ -12,6 +12,7 @@ exports.GameState = class {
 
         this.players = {};
         this.rollingStones = [];
+        this.physicsUp = false;
     }
 
     getField(x, y) {
@@ -79,13 +80,25 @@ exports.GameState = class {
             case Type.Diamond:
             case Type.Gravel:
             case Type.Dirt:
+            case Type.PowerUp:
                 return true;
             default:
                 return false;
         }
     }
 
+    sideEffects(x, y, player) {
+        const field = this.getField(x, y);
+
+        if(field.type === Type.Diamond) {
+            player.score++;
+        } else if(field.type === Type.PowerUp) {
+            this.physicsUp = !this.physicsUp;
+        }
+    }
+
     movePlayer(x, y, player) {
+        this.sideEffects(x, y, player);
         this.setField(player._posX, player._posY, new Block(Type.Empty));
         this.setField(x, y, player);
     }
@@ -99,7 +112,7 @@ exports.GameState = class {
 
     physics() {
         for (let x = 0; x < this.width; x++) {
-            this.physicsColumn(x, this.physic);
+            this.physicsColumn(x, this.physicsUp);
         }
     }
 
@@ -132,6 +145,17 @@ exports.GameState = class {
         }
     }
 
+    onPlayerDeath(id) {
+        const player = this.players[id];
+
+        if(!player) {
+            return;
+        }
+
+        player.die();
+        this.setField(player.posX, player.posY, new Block(Type.Empty));
+    }
+
     earlyUpdate() {
         for (const id in this.players) {
             this.players[id].update();
@@ -145,7 +169,7 @@ exports.GameState = class {
         for (let i = 0; i < this.rollingStones.length; i++) {
             const element = this.rollingStones[i];
 
-            if (!element.update || !element.update(this.players)) {
+            if (!element.update || !element.update(this.players, this)) {
                 update = true;
                 this.rollingStones.splice(i, 1);
                 i--;

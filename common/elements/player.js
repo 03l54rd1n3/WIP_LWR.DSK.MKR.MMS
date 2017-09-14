@@ -33,10 +33,12 @@ exports.Player = class extends MovingBlock {
     }
 
     update() {
-        super.update();
+        if (this.alive) {
+            super.update();
 
-        if (this.duration === 0) {
-            this.isMoving = false;
+            if (this.duration === 0) {
+                this.isMoving = false;
+            }
         }
 
         return true;
@@ -45,5 +47,7 @@ exports.Player = class extends MovingBlock {
     die() {
         this.alive = false;
         this.isMoving = true;
+        this.nickname += ' (dead)'
     }
-};
+}
+;

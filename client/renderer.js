@@ -11,12 +11,15 @@ export class Renderer {
     }
 
     draw(game) {
-        //this.score.innerHTML = `Score: ${game.player.score}`;
+        if(game.displayScores) {
+            game.displayScores(game.players);
+        }
+
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.drawTexture(this.background,
+        /*this.drawTexture(this.background,
             0, 0, this.canvas.width, this.canvas.height,
             game.step
-        );
+        );*/
 
         for (const item of game.fields) {
             this.drawElement(item, game.step)

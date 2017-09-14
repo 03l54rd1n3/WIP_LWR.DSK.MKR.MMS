@@ -7,6 +7,8 @@ const TypeMapping = {
     "stone": Type.Stone,
     "diamond": Type.Diamond,
     "player": Type.Player,
+    "wall": Type.Wall,
+    "powerup": Type.PowerUp,
     "crushed": "crushed",
     "background": "background"
 };
@@ -17,6 +19,9 @@ const {basePath, elements} = Theme;
 function img(src) {
     const img = new Image();
     img.src = src;
+    img.style.display = 'none';
+    document.body.appendChild(img);
+
     return img;
 }
 

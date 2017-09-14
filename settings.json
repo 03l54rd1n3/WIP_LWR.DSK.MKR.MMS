@@ -1,6 +1,9 @@
 {
   "blockSize": 16,
   "moveDuration": 9,
+  "stoneFreeze": 27,
+  "animationSlowdown": 3,
   "FPSLimit": 60,
-  "tickTime": 16.666666666666668
+  "tickTime": 16.666666666666668,
+  "chances": [35, 70, 85, 95, 99, 100]
 }

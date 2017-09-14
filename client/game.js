@@ -27,6 +27,7 @@ export class Game {
             this.frameId = requestAnimationFrame((timestamp) => {
                 this.renderer.draw(this.state);
                 this.running = true;
+                this.delta = 0;
                 this.lastFrameTime = timestamp;
                 this.frameId = requestAnimationFrame(this.main.bind(this));
             })
@@ -39,7 +40,7 @@ export class Game {
             return;
         }
 
-        this.delta = timestamp - this.lastFrameTime;
+        this.delta += (timestamp - this.lastFrameTime);
         this.lastFrameTime = timestamp;
 
         let updateSteps = 0;

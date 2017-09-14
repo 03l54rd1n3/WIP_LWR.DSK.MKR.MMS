@@ -21,6 +21,14 @@
       "path": "Diamond_Rotate.png",
       "steps": 24
     },
+    "wall": {
+      "path": "Wall.png",
+      "steps": 1
+    },
+    "powerup": {
+      "path": "Power Up.png",
+      "steps": 6
+    },
     "player": {
       "path": "character.png",
       "steps": 1

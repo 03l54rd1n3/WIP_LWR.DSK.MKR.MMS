@@ -14,9 +14,9 @@ exports.MovingBlock = class extends Drawable {
         this.x = posX * settings.blockSize;
         this.y = posY * settings.blockSize;
 
-        this._duration = 0;
-        this._stepX = 0;
-        this._stepY = 0;
+        this.duration = 0;
+        this.stepX = 0;
+        this.stepY = 0;
     }
 
     get posX() {

@@ -1,19 +1,19 @@
 const {DefaultGenerator} = require('../common/generator/default');
 const {ServerGameState} = require('./state');
 const uuid = require('uuid/v4');
+const settings = require('../settings.json');
 
 exports.SessionManager = class {
 
     constructor(socket) {
         this.socket = socket;
         this.generator = new DefaultGenerator({
-            chances: [46, 92, 96, 100]
+            chances: settings.chances
         });
 
         this.games = {};
         this.players = {};
         this.moveQueue = {};
-        this.createGame('wip');
     }
 
     update() {
@@ -37,8 +37,11 @@ exports.SessionManager = class {
     }
 
     joinGame(client, id, nickname) {
+        console.log(`Player ${client.id} is trying to join Game ${id} as '${nickname}'.`);
+
         if (client.id in this.players) {
-            client.emit('failure', 'already joined a game');
+            console.log('Player is still connected to a game');
+            this.leaveGame(client);
             return;
         }
 
@@ -58,9 +61,13 @@ exports.SessionManager = class {
         client.emit('connected', client.id);
 
         this.players[client.id] = id;
+
+        console.log(`Player ${client.id} joined Game ${id} as '${nickname}'.`);
     }
 
     leaveGame(client) {
+        console.log(`Player ${client.id} is trying to leave.`);
+
         const id = this.players[client.id];
         if (!id) {
             client.emit('failure', 'not joined a game');
@@ -76,10 +83,8 @@ exports.SessionManager = class {
         client.leave(id);
         game.removePlayer(client.id);
 
-        client.emit('bye bye');
-        client.broadcast.to(id).emit('player left');
-
         delete this.players[client.id];
+        console.log(`Player ${client.id} left Game ${id}.`);
     }
 
     onMove(player, action) {

@@ -3,6 +3,9 @@ const Type = require('../common/types');
 const {Player} = require('../common/elements/player');
 const {GameState} = require('../common/state');
 
+const settings = require('../settings.json');
+const duration = settings.moveDuration;
+
 exports.ServerGameState = class extends GameState {
 
     constructor(connection, id, width, height) {
@@ -15,14 +18,23 @@ exports.ServerGameState = class extends GameState {
     }
 
     handleMovement() {
-        let move, update = false;
+        let move, update = false, delayed = [];
         while (!this.reset && (move = this.moveQueue.shift())) {
+            const player = this.players[move.id];
+
             if (!this.onMove(move.id, move.action)) {
-                this.reset = true;
+                if (player.duration > duration) {
+                    console.log('Move is not possible', move, player);
+                    this.reset = true;
+                    continue;
+                }
+
+                console.log('Move Delayed', player);
+                delayed.push(move);
                 continue;
             }
 
-            const player = this.players[move.id];
+
             if (player) {
                 this.connection.enqueueMove(this.id, {
                     id: player.id,
@@ -34,6 +46,7 @@ exports.ServerGameState = class extends GameState {
             update = true;
         }
         this.connection.dispatchMoveQueue(this.id);
+        this.moveQueue = delayed;
         return update;
     }
 
@@ -52,7 +65,9 @@ exports.ServerGameState = class extends GameState {
         let p;
         while (p = this.joinQueue.shift()) {
             const player = new Player(p.id, 0, 0, p.nickname);
-            this.setField(0, 0, player);
+            const {x = 0, y = 0} = this.playerSpawn || {};
+
+            this.setField(x, y, player);
             this.players[p.id] = player;
 
             this.connection.dispatchJoin(this.id, p.nickname);

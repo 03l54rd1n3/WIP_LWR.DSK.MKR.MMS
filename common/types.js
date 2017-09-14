@@ -4,5 +4,7 @@ module.exports = {
     Gravel: 1,
     Stone: 2,
     Diamond: 3,
-    Player: 4,
+    Wall: 4,
+    PowerUp: 5,
+    Player: 99,
 };

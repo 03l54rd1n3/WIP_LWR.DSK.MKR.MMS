@@ -7,11 +7,12 @@ const server = require('http').Server(app);
 const io = require('socket.io')(server);
 const update = io.of('/updates');
 
+const settings = require('../settings.json');
 const sessions = new SessionManager(update);
 
 io.on('connection', function (socket) {
     socket.on('disconnect', function () {
-        console.log('user disconnected');
+        console.log(`user ${socket.id} disconnected`);
     });
 
     socket.on('chat message', function (msg) {
@@ -22,33 +23,47 @@ io.on('connection', function (socket) {
         sessions.createGame(settings);
         dispatchLobbies();
     });
+
+    dispatchLobbies();
 });
 
 update.on('connection', socket => {
     socket.on('join game', ({id, nickname}) => sessions.joinGame(socket, id, nickname));
     socket.on('leave game', () => sessions.leaveGame(socket));
-
     socket.on('out of sync', () => sessions.onSyncError(socket));
-    socket.on('player move', (move) => {
-        sessions.onMove(socket, move);
-        console.log(move);
-    });
+    socket.on('player move', (move) => sessions.onMove(socket, move));
 });
 
 function dispatchLobbies() {
     let lobbies = [];
 
-    for(const g in sessions.games) {
+    for (const g in sessions.games) {
         const {id, name = 'unnamed'} = sessions.games[g];
 
         lobbies.push({id, name});
     }
 
-    io.emit('sessions', lobbies);
+    io.emit('lobbies', lobbies);
 }
 
+let lastUpdate = Date.now();
+let delta = 0;
 setInterval(() => {
-    sessions.update();
+    const time = Date.now();
+    delta += time - lastUpdate;
+    lastUpdate = time;
+
+    let updateSteps = 0;
+
+    while (delta >= settings.tickTime) {
+        sessions.update();
+        delta -= settings.tickTime;
+
+        if (++updateSteps >= 240) {
+            break;
+        }
+    }
+
 }, 1000 / 60);
 
 app.use(express.static(__dirname + '/../public'));

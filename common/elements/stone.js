@@ -3,6 +3,7 @@ const Type = require('../types');
 
 const settings = require('../../settings.json');
 const blockSize = settings.blockSize;
+const stoneFreeze = settings.stoneFreeze;
 
 function collide(a, b) {
     return (a - b) > 0.001;
@@ -15,12 +16,13 @@ exports.MovingStone = class extends MovingBlock {
         this.freeze = 0;
     }
 
-    update(players) {
+    update(players, game) {
         for (const id in players) {
             if (!this.collideWithPlayer(players[id])) {
                 continue;
             }
-            console.log('death');
+
+            game.onPlayerDeath(id);
 
             if (global.texture) {
                 this.texture = global.texture('crushed');
@@ -49,7 +51,7 @@ exports.MovingStone = class extends MovingBlock {
 
     set posX(x) {
         super.posX = x;
-        this.freeze = 60;
+        this.freeze = stoneFreeze;
     }
 
     get posY() {
@@ -58,6 +60,6 @@ exports.MovingStone = class extends MovingBlock {
 
     set posY(y) {
         super.posY = y;
-        this.freeze = 60;
+        this.freeze = stoneFreeze;
     }
 };
