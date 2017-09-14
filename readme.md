@@ -1,7 +1,9 @@
 # Boulder Dash
 
 **Projektstart** 18.07.2017
+
 **Version** 1.0 (13.09.2017)
+
 **Autoren** Daniel Struck, Marius Mertens, Maximilian Kenfenheuer, Lennart Wörmer
 
 ## Start
