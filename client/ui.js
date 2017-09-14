@@ -1,6 +1,7 @@
 import {DefaultGenerator} from "../common/generator/default";
 import {LocalGameState, OnlineGameState} from "./state";
 import * as settings from '../settings.json';
+import {parseLevel} from '../common/generator/parser';
 
 const $createOffline = document.getElementById('lobby-offline');
 const $createOnline = document.getElementById('lobby-online');
@@ -70,7 +71,14 @@ global.connect = (id) => {
 };
 
 global.load = (level) => {
+  if (!callback) {
+      return;
+  }
 
+  const game = new LocalGameState('local', 32, 24);
+  parseLevel(game, level);
+  game.spawnPlayer('Player Unknown');
+  callback(game);
 };
 
 // display available online lobbies in the left sidebar
