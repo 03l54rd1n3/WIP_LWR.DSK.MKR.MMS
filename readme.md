@@ -56,6 +56,39 @@ Weitere Browserkompatibilität wird in den nächsten Veröffentlichungen hergest
 * Webpack - packt JavaScript-Module und macht sie ausführbar (The MIT License, https://github.com/webpack/webpack/blob/master/LICENSE)
 * uuid - Generierung von eindeutigen Spiel-IDs (The MIT License, https://github.com/kelektiv/node-uuid/blob/master/LICENSE.md)
 
+## Load a Custom Level
+
+Zurzeit können eigens erstellte Level nur über die Konsole geladen werden. Diese befindet sich in den Entwickleroptionen aller gängigen Browser und lässt sich in der Regel mit der Funktionstaste F12 öffnen.
+
+Beispiel:
+
+```javascript
+load("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+W#rW#########rd##dr##Wd########W
+WXd#W#######rd####dr#WWWWWWWWW#W
+W#dW#######rd##ee##dr########W#W
+W#d#W#####rd##e##e##dr#######W#W
+W#dW#####rd##e####e##dr######W#W
+W#d#W###rd##e##dd##e##dr#####W#W
+W#dW###rd##e##reer##e##dr####W#W
+W#d#W#rd##e##dddddd##e##dr###W#W
+W#dW#rd##e##rrrrrrrr##e##dr##W#W
+W#d#rd##e##d########d##e##dr#W#W
+W#drd##e####W##dd##W####e##dr##W
+W#d###e######W####W######e##dr#W
+Wr###e#rr#rrrrWddWrrrr#rr#e##drW
+W###W##########dd##########W###W
+WdWWWWWWWWWWWWWWWWWWWWWWWWWWWWdW
+W##############################W
+W#d#####d###d#d#####e#r#r#r#r##W
+W#d#####d###d#d#####e#d#d#d#d#dW
+W#d#####d###d#d#####e##r#r#r#r#W
+W#d######d#d##d#####e##d#d#d#d#W
+W#ddddd###d###ddddd#e###r#r#r##W
+W#######################d#d#d#dW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
+```
+
 ## Known Bugs
 
 * Wenn mehrere Spieler gleichzeitig das Spiel betreten, kann es sein, dass sich die Spieler nicht sehen, bevor sie sich bewegen.
